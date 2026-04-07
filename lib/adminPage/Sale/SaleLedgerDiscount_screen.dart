@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '/Model/SaleLedgerDiscount_model.dart';
 import '/Service/SaleLedgerDiscount_service.dart';
 import 'sale_details_mrp_screen.dart';
+import 'package:share_plus/share_plus.dart';
+import '/pdf/salePdf/sale_ledger_discount_pdf.dart';
 
 class SaleLedgerDiscountScreen extends StatefulWidget {
   final String schoolId;
@@ -11,6 +13,14 @@ class SaleLedgerDiscountScreen extends StatefulWidget {
   @override
   State<SaleLedgerDiscountScreen> createState() =>
       _SaleLedgerDiscountScreenState();
+}
+Future<void> shareLedger(SaleLedgerDiscountResponse data) async {
+  final file = await SaleLedgerDiscountPdf.generate(data);
+
+  await Share.shareXFiles(
+    [XFile(file.path)],
+    text: "Sale Ledger Discount Report",
+  );
 }
 
 class _SaleLedgerDiscountScreenState extends State<SaleLedgerDiscountScreen> {
@@ -139,6 +149,17 @@ class _SaleLedgerDiscountScreenState extends State<SaleLedgerDiscountScreen> {
         title: const Text("Sale Ledger"),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf),
+            onPressed: () async {
+              final data = await future;
+              if (data != null) {
+                await shareLedger(data);
+              }
+            },
+          ),
+        ],
       ),
       body: FutureBuilder<SaleLedgerDiscountResponse?>(
         future: future,

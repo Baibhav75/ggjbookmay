@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '/Model/purchase_details_discount_invoice_model.dart';
 import '/Service/purchase_details_discount_invoice_service.dart';
+import 'package:share_plus/share_plus.dart';
+import '/pdf/purchase_discount_invoice_pdf.dart';
 
 class PurchaseDetailsDiscountInvoiceScreen extends StatefulWidget {
   final String billNo;
@@ -21,6 +23,15 @@ class _PurchaseDetailsDiscountInvoiceScreenState
     super.initState();
     future =
         PurchaseDetailsDiscountInvoiceService.fetchInvoice(widget.billNo);
+  }
+
+  Future<void> shareInvoice(PurchaseDetailsDiscountInvoiceModel data) async {
+    final file = await PurchaseDiscountInvoicePdf.generate(data);
+
+    await Share.shareXFiles(
+      [XFile(file.path)],
+      text: "Invoice ${data.billNo}",
+    );
   }
 
   // ================= COMMON =================
@@ -151,7 +162,18 @@ class _PurchaseDetailsDiscountInvoiceScreenState
         title: Text("Purchase Invoice ${widget.billNo}"),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share), // 🔥 PDF icon
+            onPressed: () async {
+              final data = await future;
+              await shareInvoice(data);
+            },
+          ),
+        ],
+
       ),
+
       body: FutureBuilder<PurchaseDetailsDiscountInvoiceModel>(
         future: future,
         builder: (context, snapshot) {

@@ -20,6 +20,7 @@ import 'AccountHodadminScreen/ServiceHodScreen.dart';
 import 'AccountHodadminScreen/admin_drawer.dart';
 import 'BilingPurchase/PurchaseInvoice.dart';
 import 'CollectionManagement/CollectionManagementScreen.dart';
+import 'CollectionManagement/collection_hod_screen.dart';
 import 'SellReturn/order_agreement_list_screen.dart';
 import 'SellReturn/order_list_screen.dart';
 import 'ViewProductList.dart';
@@ -336,7 +337,13 @@ class _AdminPageState extends State<AdminPage> {
 
         break;
 
-      case 'COLLECTION\nHOD':
+      case 'COLLECTION\nHod':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) =>  CollectionHodScreen(),
+          ),
+        );
 
         break;
 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '/Model/sale_mix_report_mrp_model.dart';
 import '/Service/sale_mix_report_service.dart';
+import 'package:share_plus/share_plus.dart';
+import '../pdf/sale_mix_report_pdf.dart';
 
 class SaleMixReportScreen extends StatefulWidget {
   final String schoolId;
@@ -10,6 +12,14 @@ class SaleMixReportScreen extends StatefulWidget {
   @override
   State<SaleMixReportScreen> createState() =>
       _SaleMixReportScreenState();
+}
+Future<void> shareReport(SaleMixReportMrpModel data) async {
+  final file = await SaleMixReportPdf.generate(data);
+
+  await Share.shareXFiles(
+    [XFile(file.path)],
+    text: "Sale Mix Report",
+  );
 }
 
 class _SaleMixReportScreenState extends State<SaleMixReportScreen> {
@@ -146,6 +156,18 @@ class _SaleMixReportScreenState extends State<SaleMixReportScreen> {
         title: const Text("Sale Mix Report"),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
+
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf),
+            onPressed: () async {
+              final data = await future;
+              if (data != null) {
+                await shareReport(data);
+              }
+            },
+          ),
+        ],
       ),
       body: FutureBuilder<SaleMixReportMrpModel?>(
         future: future,

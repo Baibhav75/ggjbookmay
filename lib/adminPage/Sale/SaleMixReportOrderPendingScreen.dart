@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '/Model/sale_pending_mix_order_model.dart';
 import '/service/sale_pending_mix_order_service.dart';
+import 'package:share_plus/share_plus.dart';
+import '/pdf/salePdf/sale_pending_mix_pdf.dart';
 
 class SalePendingMixOrderScreen extends StatefulWidget {
   final String schoolId;
@@ -20,6 +22,14 @@ class _SalePendingMixOrderScreenState
   void initState() {
     super.initState();
     future = SalePendingMixOrderService.fetchReport(widget.schoolId);
+  }
+  Future<void> shareReport(SalePendingMixOrderModel data) async {
+    final file = await SalePendingMixPdf.generate(data);
+
+    await Share.shareXFiles(
+      [XFile(file.path)],
+      text: "Sale Pending Mix Report",
+    );
   }
 
   // ================= COMMON =================
@@ -67,6 +77,17 @@ class _SalePendingMixOrderScreenState
         title: const Text("Sale Pending Mix"),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf),
+            onPressed: () async {
+              final data = await future;
+              if (data != null) {
+                await shareReport(data);
+              }
+            },
+          ),
+        ],
       ),
       body: FutureBuilder<SalePendingMixOrderModel>(
         future: future,

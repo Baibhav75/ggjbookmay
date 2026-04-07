@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import '/Model/sale_mix_report_company_p_model.dart';
 import '/service/sale_mix_report_company_p_service.dart';
+import 'package:share_plus/share_plus.dart';
+import '/pdf/salePdf/sale_mix_company_profit_pdf.dart';
+
+
 
 class SaleMixReportCompanyPScreen extends StatefulWidget {
   final String schoolId;
@@ -21,6 +25,14 @@ class _SaleMixReportCompanyPScreenState
     super.initState();
     future =
         SaleMixReportCompanyPService.fetchReport(widget.schoolId);
+  }
+  Future<void> shareReport(SaleMixReportCompanyPModel data) async {
+    final file = await SaleMixCompanyProfitPdf.generate(data);
+
+    await Share.shareXFiles(
+      [XFile(file.path)],
+      text: "Company Profit Report",
+    );
   }
 
   // ================= HEADER =================
@@ -111,6 +123,17 @@ class _SaleMixReportCompanyPScreenState
         title: const Text("Company Profit Report"),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf),
+            onPressed: () async {
+              final data = await future;
+              if (data != null) {
+                await shareReport(data);
+              }
+            },
+          ),
+        ],
       ),
       body: FutureBuilder<SaleMixReportCompanyPModel>(
         future: future,

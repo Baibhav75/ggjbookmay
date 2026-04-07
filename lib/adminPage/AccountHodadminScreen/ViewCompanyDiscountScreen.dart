@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '/model/view_company_discount_model.dart';
 import '/service/view_company_discount_service.dart';
+import 'package:share_plus/share_plus.dart';
+import '/pdf/view_company_discount_pdf.dart';
+
 
 class ViewCompanyDiscountScreen extends StatefulWidget {
   final String billNo;
@@ -20,6 +23,15 @@ class _ViewCompanyDiscountScreenState
   void initState() {
     super.initState();
     future = ViewCompanyDiscountService.fetchInvoice(widget.billNo);
+  }
+
+  Future<void> shareInvoice(ViewCompanyDiscountModel data) async {
+    final file = await ViewCompanyDiscountPdf.generate(data);
+
+    await Share.shareXFiles(
+      [XFile(file.path)],
+      text: "Invoice ${data.billNo}",
+    );
   }
 
 
@@ -149,6 +161,15 @@ class _ViewCompanyDiscountScreenState
         title: Text("Purchase Invoice ${widget.billNo}"),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            onPressed: () async {
+              final data = await future;
+              await shareInvoice(data);
+            },
+          ),
+        ],
       ),
       body: FutureBuilder<ViewCompanyDiscountModel>(
         future: future,

@@ -3,6 +3,8 @@ import 'package:bookworld/adminPage/Sale/sale_invoice_details_screen.dart';
 import 'package:flutter/material.dart';
 import '/Model/sale_view_mrp_ledger_model.dart';
 import '/Service/sale_view_mrp_ledger_service.dart';
+import 'package:share_plus/share_plus.dart';
+import '/pdf/salePdf/sale_ledger_pdf.dart';
 
 class SaleViewMRPLedgerScreen extends StatefulWidget {
   final String schoolId;
@@ -12,6 +14,14 @@ class SaleViewMRPLedgerScreen extends StatefulWidget {
   @override
   State<SaleViewMRPLedgerScreen> createState() =>
       _SaleViewMRPLedgerScreenState();
+}
+Future<void> shareLedger(SaleViewMRPLedgerResponse data) async {
+  final file = await SaleLedgerPdf.generate(data);
+
+  await Share.shareXFiles(
+    [XFile(file.path)],
+    text: "Sale Ledger Report",
+  );
 }
 
 class _SaleViewMRPLedgerScreenState
@@ -51,6 +61,17 @@ class _SaleViewMRPLedgerScreenState
         title: const Text("Ledger"),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf),
+            onPressed: () async {
+              final data = await future;
+              if (data != null) {
+                await shareLedger(data);
+              }
+            },
+          ),
+        ],
       ),
 
       body: FutureBuilder<SaleViewMRPLedgerResponse?>(

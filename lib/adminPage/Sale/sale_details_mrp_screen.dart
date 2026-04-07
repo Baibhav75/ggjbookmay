@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '/Model/sale_details_mrp_model.dart';
 import '/Service/sale_details_mrp_service.dart';
+import 'package:share_plus/share_plus.dart';
+import '/pdf/salePdf/sale_mrp_invoice_pdf.dart';
 
 class SaleDetailsMrpScreen extends StatefulWidget {
   final String billNo;
@@ -11,6 +13,14 @@ class SaleDetailsMrpScreen extends StatefulWidget {
   @override
   State<SaleDetailsMrpScreen> createState() =>
       _SaleDetailsMrpScreenState();
+}
+Future<void> shareInvoice(SaleDetailsMrpResponse data) async {
+  final file = await SaleMrpInvoicePdf.generate(data);
+
+  await Share.shareXFiles(
+    [XFile(file.path)],
+    text: "Invoice ${data.billNo}",
+  );
 }
 
 class _SaleDetailsMrpScreenState extends State<SaleDetailsMrpScreen> {
@@ -152,6 +162,17 @@ class _SaleDetailsMrpScreenState extends State<SaleDetailsMrpScreen> {
         title: Text("MRP Invoice ${widget.billNo}"),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf),
+            onPressed: () async {
+              final data = await future;
+              if (data != null) {
+                await shareInvoice(data);
+              }
+            },
+          ),
+        ],
       ),
       body: FutureBuilder<SaleDetailsMrpResponse?>(
         future: future,

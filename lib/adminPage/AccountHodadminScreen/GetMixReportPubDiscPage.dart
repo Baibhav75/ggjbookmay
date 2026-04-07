@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../Service/GetMixReportPubDiscService.dart';
 import '/Model/GetMixReportPubDisc_model.dart';
+import 'package:share_plus/share_plus.dart';
+import '/pdf/mix_report_pub_disc_pdf.dart';
 
 class GetMixReportPubDiscPage extends StatefulWidget {
   final String publicationId;
@@ -10,6 +12,14 @@ class GetMixReportPubDiscPage extends StatefulWidget {
   @override
   State<GetMixReportPubDiscPage> createState() =>
       _GetMixReportPubDiscPageState();
+}
+Future<void> shareReport(GetMixReportPubDiscModel report) async {
+  final file = await MixReportPubDiscPdf.generate(report);
+
+  await Share.shareXFiles(
+    [XFile(file.path)],
+    text: "Mix Report Publication Discount",
+  );
 }
 
 class _GetMixReportPubDiscPageState
@@ -32,6 +42,17 @@ class _GetMixReportPubDiscPageState
         title: const Text("Mix Report Publication Discount"),
         backgroundColor: const Color(0xFF6B46C1),
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf),
+            onPressed: () async {
+              final report = await reportFuture;
+              if (report != null) {
+                await shareReport(report);
+              }
+            },
+          ),
+        ],
 
       ),
       body: FutureBuilder<GetMixReportPubDiscModel?>(

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '/Model/purchase_invoice_mrp_model.dart';
 import '/Service/purchase_invoice_service.dart';
+import 'package:share_plus/share_plus.dart';
+import '/pdf/invoice_pdf.dart';
+
 
 class PurchaseInvoicePage extends StatefulWidget {
   final String billNo;
@@ -20,6 +23,16 @@ class _PurchaseInvoicePageState extends State<PurchaseInvoicePage> {
     super.initState();
     invoiceFuture = PurchaseInvoiceMrpService.getInvoice(widget.billNo);
   }
+  Future<void> shareInvoice(PurchaseInvoiceMrpModel invoice) async {
+    final file = await PurchaseInvoicePdf.generate(invoice);
+
+    await Share.shareXFiles(
+      [XFile(file.path)],
+      text: "Purchase Invoice ${invoice.billNo}",
+    );
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +43,15 @@ class _PurchaseInvoicePageState extends State<PurchaseInvoicePage> {
         backgroundColor: const Color(0xFF6B46C1),
         foregroundColor: Colors.white,
         elevation: 2,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            onPressed: () async {
+              final invoice = await invoiceFuture;
+              await shareInvoice(invoice);
+            },
+          ),
+        ],
       ),
       body: FutureBuilder<PurchaseInvoiceMrpModel>(
         future: invoiceFuture,

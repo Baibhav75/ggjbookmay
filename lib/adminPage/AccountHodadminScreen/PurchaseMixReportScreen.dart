@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '/Model/PurchaseMixReport_model.dart';
 import '/service/purchase_mix_report_service.dart';
+import 'package:share_plus/share_plus.dart';
+import '/pdf/purchase_mix_report_pdf.dart';
+
 
 class PurchaseMixReportScreen extends StatefulWidget {
   final String publicationId;
@@ -31,6 +34,17 @@ class _PurchaseMixReportScreenState
       model = data;
       isLoading = false;
     });
+  }
+
+  Future<void> shareReport() async {
+    if (model == null) return;
+
+    final file = await PurchaseMixReportPdf.generate(model!);
+
+    await Share.shareXFiles(
+      [XFile(file.path)],
+      text: "Purchase Mix Report",
+    );
   }
 
   // 🔥 SERIES GROUPING
@@ -284,6 +298,12 @@ class _PurchaseMixReportScreenState
         backgroundColor: Colors.deepPurple,
         iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            onPressed: shareReport,
+          ),
+        ],
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())

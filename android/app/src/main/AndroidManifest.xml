@@ -57,5 +57,11 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+
+        <!-- 🔥 ADD THIS FOR PDF SHARE (VERY IMPORTANT) -->
+        <intent>
+            <action android:name="android.intent.action.SEND" />
+            <data android:mimeType="application/pdf" />
+        </intent>
     </queries>
 </manifest>

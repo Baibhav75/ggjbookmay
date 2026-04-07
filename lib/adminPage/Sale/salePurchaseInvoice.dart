@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../AccountHodadminScreen/PubchaseEnterInvoice.dart';
 import '../AccountHodadminScreen/PurchaseMixReportScreen.dart';
 import '../AccountHodadminScreen/ViewCompanyDiscountScreen.dart';
+import '../PurchaseReturn/PurchaseViewMrpLedger.dart';
 import '/Model/purchase_history_model.dart';
 import '/Service/purchase_history_service.dart';
 import 'PurchaseMrpDestails.dart';
@@ -353,7 +354,14 @@ class _SalePurchaseInvoicePageState
                                         break;
 
                                       case 'mrp_ledger':
-                                        print("MRP Ledger");
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) =>  PurchaseMrpLedgerScreen(
+                                              publicationId: e. publicationId.toString(),
+                                            ),
+                                          ),
+                                        );
                                         break;
 
                                       case 'company_ledger':
