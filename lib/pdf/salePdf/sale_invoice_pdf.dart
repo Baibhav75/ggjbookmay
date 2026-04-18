@@ -8,12 +8,9 @@ class SaleInvoicePdf {
   static Future<File> generate(SaleInvoiceDetailsResponse data) async {
     final pdf = pw.Document();
 
-    String formatDate(String date) {
-      try {
-        return DateTime.parse(date).toLocal().toString().split(' ')[0];
-      } catch (e) {
-        return "";
-      }
+    String formatDate(DateTime? date) {
+      if (date == null) return "";
+      return "${date.day}-${date.month}-${date.year}";
     }
 
     /// 🔹 GROUPING (Same as UI)
@@ -82,13 +79,17 @@ class SaleInvoicePdf {
               pw.Table(
                 border: pw.TableBorder.all(),
                 children: [
-                  row3("Invoice No", data.billNo,
-                      "Party Name", data.schoolName,
-                      "Bill Date", formatDate(data.billDate)),
+                  row3(
+                    "Invoice No", data.billNo,
+                    "Party Name", data.schoolName,
+                    "Bill Date", formatDate(data.billDate),
+                  ),
 
-                  row3("Transport", data.transport.isNotEmpty ? data.transport : "SELF",
-                      "Address", data.address,
-                      "Rec Date", formatDate(data.receiveDate)),
+                  row3(
+                    "Transport", data.transport.isNotEmpty ? data.transport : "SELF",
+                    "Address", data.address,
+                    "Rec Date", formatDate(data.receiveDate),
+                  ),
                 ],
               ),
             ],
@@ -154,8 +155,8 @@ class SaleInvoicePdf {
                   rows.add(
                     pw.TableRow(
                       children: [
-                        cell("Rs{index++}"),
-                        cell("Rs{item.bookName} - ${item.subject} - ${item.classes}"),
+                        cell("${index++}"),
+                        cell("${item.bookName} - ${item.subject} - ${item.classes}"),
                         cell(item.qty.toStringAsFixed(0)),
                         cell(item.rate.toStringAsFixed(2)),
                         cell(item.amount.toStringAsFixed(2)),

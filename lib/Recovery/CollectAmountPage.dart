@@ -3,6 +3,8 @@ import '../Service/recover_collect_amount_service.dart';
 import '../Model/recover_collect_amount_model.dart';
 import '../Service/send_payment_otp_service.dart';
 import '../Service/verify_payment_otp_service.dart';
+import '../appDart/discrete_circular_loader.dart';
+import 'package:number_to_words/number_to_words.dart';
 
 class CollectAmountPage extends StatefulWidget {
   final String schoolId;
@@ -20,6 +22,7 @@ class CollectAmountPage extends StatefulWidget {
 
 class _CollectAmountPageState extends State<CollectAmountPage> {
   int _currentStep = 0;
+  String amountInWords = "";
 
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _otpController = TextEditingController();
@@ -44,6 +47,7 @@ class _CollectAmountPageState extends State<CollectAmountPage> {
 
   // ✅ GLOBAL VARIABLE (IMPORTANT)
   String maskedNumber = "";
+  int enteredAmountLive = 0;
 
   String maskMobile(String number) {
     if (number.length < 10) return number;
@@ -203,16 +207,30 @@ class _CollectAmountPageState extends State<CollectAmountPage> {
         iconTheme:
         const IconThemeData(color: Colors.white),
       ),
-      body: _isLoading
-          ? const Center(
-          child: CircularProgressIndicator())
-          : AnimatedSwitcher(
-        duration:
-        const Duration(milliseconds: 300),
-        child: _currentStep == 0
-            ? _buildPaymentStep()
-            : _buildOtpStep(),
-      ),
+        body: Stack(
+          children: [
+
+            /// 🔶 MAIN UI
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: _currentStep == 0
+                  ? _buildPaymentStep()
+                  : _buildOtpStep(),
+            ),
+
+            /// 🔥 PAGE LOADER
+            if (_isLoading)
+              Container(
+                color: Colors.black.withOpacity(0.2),
+                child: const Center(
+                  child: SchoolLoader(
+                    size: 70,
+                    color: Color(0xff1F4BA5),
+                  ),
+                ),
+              ),
+          ],
+        ),
     );
   }
 
@@ -260,20 +278,44 @@ class _CollectAmountPageState extends State<CollectAmountPage> {
 
           TextField(
             controller: _amountController,
-            keyboardType:
-            TextInputType.number,
-            decoration:
-            const InputDecoration(
-              labelText:
-              "Enter Received Amount",
+            keyboardType: TextInputType.number,
+            onChanged: (value) {
+              final number = int.tryParse(value) ?? 0;
+
+              setState(() {
+                enteredAmountLive = number;
+
+                if (number > 0) {
+                  amountInWords =
+                      NumberToWord().convert('en-in', number) + " rupees";
+                } else {
+                  amountInWords = "";
+                }
+              });
+            },
+            decoration: const InputDecoration(
+              labelText: "Enter Received Amount",
               prefixText: "₹ ",
               filled: true,
-              fillColor:
-              Color(0xffFFF6E0),
-              border:
-              OutlineInputBorder(),
+              fillColor: Color(0xffFFF6E0),
+              border: OutlineInputBorder(),
             ),
           ),
+          /// 🔥 👇 YE LINE ADD KARO (IMPORTANT)
+          if (amountInWords.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                amountInWords,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green, //
+                ),
+              ),
+            ),
+
+
 
           const SizedBox(height: 20),
 
@@ -294,14 +336,17 @@ class _CollectAmountPageState extends State<CollectAmountPage> {
                     vertical: 14),
               ),
               child: _isSendingOtp
-                  ? const CircularProgressIndicator(
-                color: Colors.white,
+                  ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
               )
                   : const Text(
                 "Send OTP",
-                style: TextStyle(
-                    color:
-                    Colors.white),
+                style: TextStyle(color: Colors.white),
               ),
             ),
           ),
@@ -353,8 +398,13 @@ class _CollectAmountPageState extends State<CollectAmountPage> {
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
               child: _isVerifying
-                  ? const CircularProgressIndicator(
-                color: Colors.white,
+                  ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
               )
                   : const Text(
                 "Verify & Submit",

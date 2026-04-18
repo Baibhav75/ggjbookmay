@@ -3,6 +3,7 @@ import 'package:bookworld/adminPage/Sale/sale_invoice_details_screen.dart';
 import 'package:bookworld/adminPage/Sale/sale_view_mrp_ledger_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../appDart/discrete_circular_loader.dart';
 import '/Model/sale_invoice_history_model.dart';
 import '/Service/sale_invoice_history_service.dart';
 import 'EnterysaleScreen.dart';
@@ -10,6 +11,7 @@ import 'SaleLedgerDiscount_screen.dart';
 import 'SaleMixReportCompanyPScreen.dart';
 import 'SaleMixReportOrderPendingScreen.dart';
 import 'SaleMixReportScreen.dart';
+import '';
 
 class SaleInvoiceHistoryScreen extends StatefulWidget {
   const SaleInvoiceHistoryScreen({super.key});
@@ -103,10 +105,11 @@ class _SaleInvoiceHistoryScreenState
         ],
       ),
 
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+        body: Stack(
+            children: [
 
-          : Column(
+        /// 🔶 MAIN UI (ALWAYS RENDER)
+        Column(
         children: [
           // 🔥 SUMMARY CARD (TOP)
           Container(
@@ -395,6 +398,21 @@ class _SaleInvoiceHistoryScreenState
 
         ],
       ),
+
+              /// 🔥 LOADER (CORRECT PLACE)
+              if (isLoading)
+                Container(
+                  color: Colors.black.withOpacity(0.2),
+                  child: const Center(
+                    child: SchoolLoader(
+                      size: 70,
+                      color: Colors.deepPurple,
+                    ),
+                  ),
+                ),
+            ],
+        ),
+
     );
   }
 

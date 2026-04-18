@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 
 import '../AccountHodadminScreen/PubchaseEnterInvoice.dart';
 import '../AccountHodadminScreen/PurchaseMixReportScreen.dart';
+import '../AccountHodadminScreen/PurchaseStock_register_screen.dart';
 import '../AccountHodadminScreen/ViewCompanyDiscountScreen.dart';
 import '../PurchaseReturn/PurchaseViewMrpLedger.dart';
 import '/Model/purchase_history_model.dart';
 import '/Service/purchase_history_service.dart';
 import 'PurchaseMrpDestails.dart';
+import '/appDart/discrete_circular_loader.dart';
 import '/adminPage/AccountHodadminScreen/ViewPurchaseDiscountInvoiceScreen.dart';
 
 class SalePurchaseInvoiceHistory extends StatefulWidget {
@@ -115,12 +117,10 @@ class _SalePurchaseInvoicePageState
         ],
       ),
 
-      body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : Stack(
+      body: Stack(
         children: [
 
-          /// MAIN UI
+          /// 🔶 MAIN UI
           Column(
             children: [
 
@@ -163,6 +163,7 @@ class _SalePurchaseInvoicePageState
                         ),
                       ),
                     ),
+
 
                     /// TOTAL BOX
                     if (!isSearching) ...[
@@ -339,7 +340,14 @@ class _SalePurchaseInvoicePageState
                                         break;
 
                                       case 'stock_register':
-                                        print("Stock Register");
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => StockRegisterScreen(
+                                              publicationId: e. publicationId.toString(),
+                                            ),
+                                          ),
+                                        );
                                         break;
 
                                       case 'mix_pub_disc':
@@ -402,6 +410,16 @@ class _SalePurchaseInvoicePageState
               ),
             ],
           ),
+          //  /// 🔥 LOADER OVERLAY
+          if (loading)
+            Container(
+              color: Colors.black.withOpacity(0.2),
+              child: const Center(
+                child:SchoolLoader(size: 70,
+                  color: Colors.deepPurple,),
+              ),
+            ),
+
 
           /// 🔼 TOP BUTTON
           Positioned(

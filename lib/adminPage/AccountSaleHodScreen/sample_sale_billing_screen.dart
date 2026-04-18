@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '/Model/sample_sale_billing_model.dart';
 import '/Service/sample_sale_billing_service.dart';
+import 'SaleSuperBrandBillDetails.dart';
 
 class SampleSaleBillingScreen extends StatefulWidget {
   const SampleSaleBillingScreen({super.key});
@@ -144,14 +145,35 @@ class _SampleSaleBillingScreenState extends State<SampleSaleBillingScreen> {
                                   child: Text("₹ ${item.amount.toStringAsFixed(2)}"),
                                 ),
                                 SizedBox(
-                                  width: 80,
-                                  child: IconButton(
-                                    icon: const Icon(Icons.visibility, color: Colors.blue),
-                                    onPressed: () {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text("View Bill ${item.billNo}")),
-                                      );
+                                  width: 100,
+                                  child: PopupMenuButton<String>(
+                                    onSelected: (value) {
+                                      if (value == "details") {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => SaleSuperBrandBillDetailsScreen (
+                                              billNo: item.billNo,
+                                            ),
+                                          ),
+                                        );
+                                      } else if (value == "ledger") {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text("Ledger for ${item.billNo}")),
+                                        );
+                                      }
                                     },
+                                    itemBuilder: (context) => [
+                                      const PopupMenuItem(
+                                        value: "details",
+                                        child: Text("MRP Details"),
+                                      ),
+                                      const PopupMenuItem(
+                                        value: "ledger",
+                                        child: Text("MRP Ledger"),
+                                      ),
+                                    ],
+                                    child: const Icon(Icons.visibility, color: Colors.blue),
                                   ),
                                 ),
                               ],

@@ -5,7 +5,8 @@ import '/Model/SaleLedgerDiscount_model.dart';
 class SaleLedgerDiscountService {
   static Future<SaleLedgerDiscountResponse?> fetchLedger(String schoolId) async {
     final url =
-        "https://g17bookworld.com/api/ViewLadgerSalediscount/GetLedgerDiscount?schoolId=$schoolId";
+        "https://g17bookworld.com/api/ViewLadgerSalediscount/GetLedger?schoolId=$schoolId";
+
 
     final response = await http.get(Uri.parse(url));
 

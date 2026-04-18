@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'ForgotPasswordPage.dart';
 import 'admin_page.dart';
 import 'package:bookworld/Model/login_model.dart';
 import 'package:bookworld/Service/admin_login_service.dart';
@@ -178,6 +179,20 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                 _buildLoginButton(),
                 const SizedBox(height: 30),
 
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ForgotPasswordPage(),
+                      ),
+                    );
+                  },
+                  child: const Text("Forgot Password?"),
+                ),
+
+                const SizedBox(height: 20),
+
               ],
             ),
           ),
@@ -333,10 +348,15 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
-              ),
+              )
+
+
+
       ),
     );
   }
+
+
 
 
 

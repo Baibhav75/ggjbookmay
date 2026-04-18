@@ -28,4 +28,13 @@ class ApiConstants {
   static String purchaseReturnDetails(String billNo) =>
       "$baseUrl/PurchaseReturnDetails/GetPurchaseInvoice?billNo=$billNo";
 
+  // sale simple desing
+
+  static const String saleSuperBrandBillDetails =
+      "SuperBrandBillingSampleDetails/ViewSaleMRPInvoice";
+
+  // Purchase View StockRegister
+  static const String stockRegister =
+      "ViewStoctRegister/GetStockRegister";
+
 }

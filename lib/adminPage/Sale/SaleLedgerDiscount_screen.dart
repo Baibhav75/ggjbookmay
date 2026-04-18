@@ -1,3 +1,4 @@
+import 'package:bookworld/adminPage/Sale/sale_invoice_details_screen.dart';
 import 'package:flutter/material.dart';
 import '/Model/SaleLedgerDiscount_model.dart';
 import '/Service/SaleLedgerDiscount_service.dart';
@@ -269,8 +270,8 @@ class _SaleLedgerDiscountScreenState extends State<SaleLedgerDiscountScreen> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => SaleDetailsMrpScreen(
-                                        billNo: e.type.replaceAll(RegExp(r'[^0-9]'), ''),
+                                      builder: (_) => SaleInvoiceDetailsScreen(
+                                        billNo: e.particulars.replaceAll(RegExp(r'[^0-9]'), ''),
                                         date: formatDate(e.date),
                                       ),
                                     ),

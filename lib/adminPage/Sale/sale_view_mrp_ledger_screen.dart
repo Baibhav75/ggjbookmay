@@ -1,6 +1,7 @@
 import 'package:bookworld/adminPage/Sale/sale_details_mrp_screen.dart';
 import 'package:bookworld/adminPage/Sale/sale_invoice_details_screen.dart';
 import 'package:flutter/material.dart';
+import '../SellReturn/sale_return_mrp_invoice_screenInvoice.dart';
 import '/Model/sale_view_mrp_ledger_model.dart';
 import '/Service/sale_view_mrp_ledger_service.dart';
 import 'package:share_plus/share_plus.dart';
@@ -223,21 +224,39 @@ class _SaleViewMRPLedgerScreenState
 
                               GestureDetector(
                                 onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => SaleInvoiceDetailsScreen(
-                                        billNo: e.particulars.replaceAll(RegExp(r'[^0-9]'), ''),
-                                        date: formatDate(e.date),
+                                  final billNo = e.particulars.replaceAll(RegExp(r'[^0-9]'), '');
+                                  final formattedDate = formatDate(e.date);
+
+                                  if (e.particulars.toLowerCase().contains("return")) {
+                                    // 🔥 RETURN INVOICE SCREEN
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => SaleReturnMrpInvoiceScreen(
+                                          billNo: billNo,
+                                          date: formattedDate,
+                                        ),
                                       ),
-                                    ),
-                                  );
+                                    );
+                                  } else {
+                                    // 🔥 NORMAL SALE INVOICE SCREEN
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => SaleInvoiceDetailsScreen(
+                                          billNo: billNo,
+                                          date: formattedDate,
+                                        ),
+                                      ),
+                                    );
+                                  }
                                 },
                                 child: cell(
                                   e.particulars,
                                   bold: true,
-                                  color: isOpening ? Colors.green.shade900
-                                      : Colors.blue, // ✅ TEXT COLOR
+                                  color: isOpening
+                                      ? Colors.green.shade900
+                                      : Colors.blue,
                                 ),
                               ),
 

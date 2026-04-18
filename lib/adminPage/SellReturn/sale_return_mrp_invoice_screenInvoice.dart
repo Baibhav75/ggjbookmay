@@ -7,8 +7,10 @@ import '/pdf/sale_return_mrp_invoice_pdf.dart';
 
 class SaleReturnMrpInvoiceScreen extends StatefulWidget {
   final String billNo;
+  final String? date;
 
-  const SaleReturnMrpInvoiceScreen({super.key, required this.billNo});
+
+  const SaleReturnMrpInvoiceScreen({super.key, required this.billNo, this.date });
 
   @override
   State<SaleReturnMrpInvoiceScreen> createState() =>

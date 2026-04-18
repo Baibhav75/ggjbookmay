@@ -113,7 +113,7 @@ class _SaleInvoiceDetailsScreenState extends State<SaleInvoiceDetailsScreen> {
         const Divider(color: Colors.black, thickness: 2),
         const SizedBox(height: 10),
         const Text(
-          "Sale Invoice",
+          "Sale Discount Invoice",
           style: TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: Color(0xFF2B4C7E)),
         ),
         const SizedBox(height: 15),
@@ -128,12 +128,12 @@ class _SaleInvoiceDetailsScreenState extends State<SaleInvoiceDetailsScreen> {
             TableRow(children: [
               infoCell("Invoice No: ", data.billNo),
               infoCell("Party Name: ", data.schoolName),
-              infoCell("Bill Date: ", widget.date ?? (data.billDate.isNotEmpty ? data.billDate.toString().split("T")[0] : "")),
+              infoCell("Bill Date: ", widget.date ?? (data.billDate != null ? data.billDate.toString().split("T")[0] : "")),
             ]),
             TableRow(children: [
               infoCell("Transport: ", data.transport.isNotEmpty ? data.transport : "SELF"),
               infoCell("Address: ", data.address),
-              infoCell("Rec. Date: ", widget.date ?? (data.receiveDate.isNotEmpty ? data.receiveDate.toString().split("T")[0] : "")),
+              infoCell("Rec. Date: ", widget.date ?? (data.receiveDate != null ? data.receiveDate.toString().split("T")[0] : "")),
             ]),
             TableRow(children: [
                const SizedBox(),
@@ -190,7 +190,7 @@ class _SaleInvoiceDetailsScreenState extends State<SaleInvoiceDetailsScreen> {
           
           Map<String, List<SaleInvoiceItem>> groupedItems = {};
           for (var item in data.items) {
-            String key = item.publication;
+            String key = item.series.isNotEmpty ? item.series : "Unknown Series";
             if (!groupedItems.containsKey(key)) {
               groupedItems[key] = [];
             }
@@ -247,19 +247,41 @@ class _SaleInvoiceDetailsScreenState extends State<SaleInvoiceDetailsScreen> {
                               tableHeader("Qty"),
                               tableHeader("Rate"),
                               tableHeader("Amount"),
-                              tableHeader("Net Amt."),
+                              tableHeader("Amt With Disc."),
                             ],
                           ),
                           ...groupedItems.entries.expand((entry) {
-                            String publication = entry.key;
+                            String series = entry.key;
                             List<SaleInvoiceItem> group = entry.value;
+                            String publication = group.isNotEmpty && group.first.publication.isNotEmpty ? group.first.publication : "";
+
+                            double groupQty = 0;
+                            double groupAmount = 0;
+                            double groupNetAmount = 0;
+                            for (var item in group) {
+                              groupQty += item.qty;
+                              groupAmount += item.amount;
+                              groupNetAmount += item.netAmount;
+                            }
+                            
+                            double groupDiscPercent = group.first.discountPercent;
+                            if (groupDiscPercent == 0 && groupAmount > 0) {
+                               groupDiscPercent = ((groupAmount - groupNetAmount) / groupAmount) * 100;
+                            }
 
                             List<TableRow> rows = [
                               TableRow(
                                 decoration: BoxDecoration(color: Colors.grey.shade50),
                                 children: [
                                   const SizedBox(),
-                                  const SizedBox(),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8),
+                                    child: Text(
+                                      "Series: $series",
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF2B4C7E)),
+                                      textAlign: TextAlign.left,
+                                    ),
+                                  ),
                                   const SizedBox(),
                                   const SizedBox(),
                                   const SizedBox(),
@@ -284,18 +306,47 @@ class _SaleInvoiceDetailsScreenState extends State<SaleInvoiceDetailsScreen> {
                                     tableCell(item.qty.toStringAsFixed(0)),
                                     tableCell(item.rate.toStringAsFixed(2)),
                                     tableCell(item.amount.toStringAsFixed(2)),
-                                    tableCell(item.netAmount.toStringAsFixed(2)),
+                                    const SizedBox(),
                                   ],
                                 ),
                               );
                             }
+                            
+                            rows.add(
+                              TableRow(
+                                children: [
+                                  const SizedBox(),
+                                  tableCell("Subtotal:", align: TextAlign.right, weight: FontWeight.bold),
+                                  tableCell(groupQty.toStringAsFixed(0), weight: FontWeight.bold),
+                                  const SizedBox(),
+                                  tableCell("₹ ${groupAmount.toStringAsFixed(2)}", weight: FontWeight.bold),
+                                  const SizedBox(),
+                                ],
+                              ),
+                            );
+
+                            rows.add(
+                              TableRow(
+                                decoration: BoxDecoration(color: Colors.grey.shade100),
+                                children: [
+                                  const SizedBox(),
+                                  tableCell("Disc(%) :", align: TextAlign.right, weight: FontWeight.bold),
+                                  tableCell(groupDiscPercent.toStringAsFixed(2), weight: FontWeight.bold),
+                                  const SizedBox(),
+                                  const SizedBox(),
+                                  tableCell("₹ ${groupNetAmount.toStringAsFixed(4)}", weight: FontWeight.bold),
+                                ],
+                              ),
+                            );
+                            
                             return rows;
                           }),
                           
                           TableRow(
+                            decoration: BoxDecoration(color: Colors.green.shade100),
                             children: [
                               const SizedBox(),
-                              tableCell("Subtotal:", align: TextAlign.right, weight: FontWeight.bold),
+                              tableCell("Grand Total:", align: TextAlign.right, weight: FontWeight.bold),
                               tableCell(totalQty.toStringAsFixed(0), weight: FontWeight.bold),
                               const SizedBox(),
                               tableCell("₹ ${data.grandAmount.toStringAsFixed(2)}", weight: FontWeight.bold),
@@ -304,23 +355,16 @@ class _SaleInvoiceDetailsScreenState extends State<SaleInvoiceDetailsScreen> {
                           ),
                           
                           TableRow(
-                            decoration: BoxDecoration(color: Colors.blue.shade50),
+                            decoration: BoxDecoration(color: Colors.lightBlue.shade100),
                             children: [
                               const SizedBox(),
-                              tableCell("Discount:", align: TextAlign.right, weight: FontWeight.bold),
-                              const SizedBox(),
-                              const SizedBox(),
-                              const SizedBox(),
-                              tableCell("₹ ${data.grandDiscount.toStringAsFixed(2)}", weight: FontWeight.bold), 
-                            ],
-                          ),
-
-                          TableRow(
-                            decoration: BoxDecoration(color: Colors.green.shade100),
-                            children: [
-                              const SizedBox(),
-                              tableCell("Grand Total:", align: TextAlign.right, weight: FontWeight.bold),
-                              tableCell(totalQty.toStringAsFixed(0), weight: FontWeight.bold),
+                              tableCell("Total Discount:", align: TextAlign.right, weight: FontWeight.bold),
+                              tableCell(
+                                data.grandAmount > 0 
+                                  ? ((data.grandAmount - data.grandTotal) / data.grandAmount * 100).toStringAsFixed(2) + "%" 
+                                  : "0.00%", 
+                                weight: FontWeight.bold
+                              ),
                               const SizedBox(),
                               const SizedBox(),
                               tableCell("₹ ${data.grandTotal.toStringAsFixed(2)}", weight: FontWeight.bold),

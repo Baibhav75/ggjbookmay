@@ -3,8 +3,8 @@ class SaleInvoiceDetailsResponse {
   final String schoolName;
   final String address;
   final String transport;
-  final String billDate;
-  final String receiveDate;
+  final DateTime? billDate;
+  final DateTime? receiveDate;
   final String remark;
   final double grandAmount;
   final double grandDiscount;
@@ -31,13 +31,17 @@ class SaleInvoiceDetailsResponse {
       schoolName: json['SchoolName'] ?? '',
       address: json['Address'] ?? '',
       transport: json['Transport'] ?? '',
-      billDate: json['BillDate'] ?? '',
-      receiveDate: json['ReceiveDate'] ?? '',
+      billDate: json['BillDate'] != null
+          ? DateTime.tryParse(json['BillDate'])
+          : null,
+      receiveDate: json['ReceiveDate'] != null
+          ? DateTime.tryParse(json['ReceiveDate'])
+          : null,
       remark: json['Remark'] ?? '',
       grandAmount: (json['GrandAmount'] ?? 0).toDouble(),
       grandDiscount: (json['GrandDiscount'] ?? 0).toDouble(),
       grandTotal: (json['GrandTotal'] ?? 0).toDouble(),
-      items: (json['Items'] as List)
+      items: (json['Items'] as List? ?? [])
           .map((e) => SaleInvoiceItem.fromJson(e))
           .toList(),
     );
@@ -54,6 +58,11 @@ class SaleInvoiceItem {
   final double netAmount;
   final String publication;
 
+  // NEW FIELDS
+  final double discountPercent;
+  final double discountAmount;
+  final String series;
+
   SaleInvoiceItem({
     required this.bookName,
     required this.classes,
@@ -63,6 +72,9 @@ class SaleInvoiceItem {
     required this.amount,
     required this.netAmount,
     required this.publication,
+    required this.discountPercent,
+    required this.discountAmount,
+    required this.series,
   });
 
   factory SaleInvoiceItem.fromJson(Map<String, dynamic> json) {
@@ -75,6 +87,11 @@ class SaleInvoiceItem {
       amount: (json['Amount'] ?? 0).toDouble(),
       netAmount: (json['NetAmount'] ?? 0).toDouble(),
       publication: json['Publication'] ?? '',
+
+      // NEW
+      discountPercent: (json['DiscountPercent'] ?? 0).toDouble(),
+      discountAmount: (json['DiscountAmount'] ?? 0).toDouble(),
+      series: json['Series'] ?? '',
     );
   }
 }
