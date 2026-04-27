@@ -19,10 +19,18 @@ class _SaleSampleNotForSaleScreenState
   bool isLoading = true;
   double grandTotal = 0;
 
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
     loadData();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   void loadData() async {
@@ -112,6 +120,7 @@ class _SaleSampleNotForSaleScreenState
                     /// LIST
                     Expanded(
                       child: ListView.builder(
+                        controller: _scrollController,
                         itemCount: filteredList.length,
                         itemBuilder: (context, index) {
                           final item = filteredList[index];
@@ -180,6 +189,35 @@ class _SaleSampleNotForSaleScreenState
               ],
             ),
           ),
+        ],
+      ),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            mini: true,
+            onPressed: () {
+              _scrollController.animateTo(
+                0,
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeInOut,
+              );
+            },
+            child: const Icon(Icons.arrow_upward),
+          ),
+          const SizedBox(height: 10),
+          FloatingActionButton(
+            mini: true,
+            onPressed: () {
+              _scrollController.animateTo(
+                _scrollController.position.maxScrollExtent,
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeInOut,
+              );
+            },
+            child: const Icon(Icons.arrow_downward),
+          ),
+          const SizedBox(height: 50),
         ],
       ),
     );

@@ -15,6 +15,10 @@ class SaleLedgerPdf {
         return "";
       }
     }
+    String formatAmount(double? value) {
+      if (value == null || value == 0) return "";
+      return "Rs ${value.toStringAsFixed(2)}";
+    }
 
     pdf.addPage(
       pw.MultiPage(
@@ -120,8 +124,8 @@ class SaleLedgerPdf {
                       color: isOpening ? PdfColors.green800 : PdfColors.blue,
                     ),
 
-                    cell("Rs ${e.debit.toStringAsFixed(2)}"),
-                    cell("Rs ${e.credit.toStringAsFixed(2)}"),
+                    cell(formatAmount(e.debit)),
+                    cell(formatAmount(e.credit)),
                     cell("Rs ${e.balance.toStringAsFixed(2)}"),
                   ],
                 );

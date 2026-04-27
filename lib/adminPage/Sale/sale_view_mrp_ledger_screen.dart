@@ -269,8 +269,17 @@ class _SaleViewMRPLedgerScreenState
                                   ),
                                 ),
 
-                                cell("₹ ${e.debit}"),
-                                cell("₹ ${e.credit}"),
+                                cell(
+                                  (e.debit == null || e.debit == 0)
+                                      ? ""
+                                      : "₹ ${e.debit}",
+                                ),
+
+                                cell(
+                                  (e.credit == null || e.credit == 0)
+                                      ? ""
+                                      : "₹ ${e.credit}",
+                                ),
                                 cell("₹ ${e.balance}"),
                               ],
                             );

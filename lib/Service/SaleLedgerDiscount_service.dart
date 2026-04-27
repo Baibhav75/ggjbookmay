@@ -7,6 +7,8 @@ class SaleLedgerDiscountService {
     final url =
         "https://g17bookworld.com/api/ViewLadgerSalediscount/GetLedger?schoolId=$schoolId";
 
+    //https://g17bookworld.com/api/ViewMRPLadger/GetLedger?schoolId=$schoolId
+
 
     final response = await http.get(Uri.parse(url));
 

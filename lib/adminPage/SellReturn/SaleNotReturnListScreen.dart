@@ -1,3 +1,4 @@
+import 'package:bookworld/adminPage/SellReturn/sample_not_sale_return_details_screen.dart';
 import 'package:flutter/material.dart';
 import '/Model/sale_not_return_list_model.dart';
 import '/Service/sale_not_return_list_service.dart';
@@ -148,13 +149,27 @@ class _SaleNotReturnListScreenState
                                   child: PopupMenuButton<String>(
                                     onSelected: (value) {
                                       if (value == "View Discount Details") {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text("Discount for ${item.billNo}")),
+
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => SampleNotSaleReturnDetailsScreen (
+                                              billNo: item.billNo,
+                                            ),
+                                          ),
                                         );
+
                                       } else if (value == "View MRP Details") {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text("MRP for ${item.billNo}")),
+
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => SampleNotSaleReturnDetailsScreen (
+                                              billNo: item.billNo,
+                                            ),
+                                          ),
                                         );
+
                                       }
                                     },
                                     itemBuilder: (context) => const [

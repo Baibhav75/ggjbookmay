@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../SellReturn/sale_return_sample_screenDetails.dart';
 import '/Model/sale_sample_return_list_model.dart';
 import '/Service/sale_sample_return_list_service.dart';
 
@@ -146,24 +147,43 @@ class _SaleSampleReturnListScreenState
                                   width: 40,
                                   child: PopupMenuButton<String>(
                                     onSelected: (value) {
-                                      if (value == "Discount ") {
 
-                                      } else if (value == "MRP Details") {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text("Ledger for ${item.billNo}")),
+                                      /// 🔥 DISCOUNT CLICK
+                                      if (value == "discount") {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => SaleReturnSampleScreen(
+                                              billNo: item.billNo.toString(),
+                                            ),
+                                          ),
+                                        );
+                                      }
+
+                                      /// 🔥 MRP CLICK
+                                      else if (value == "mrp") {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => SaleReturnSampleScreen(
+                                              billNo: item.billNo.toString(),
+                                            ),
+                                          ),
                                         );
                                       }
                                     },
-                                    itemBuilder: (context) => [
-                                      const PopupMenuItem(
-                                        value: "View Discount Details",
-                                        child: Text("View Discount "),
+
+                                    itemBuilder: (context) => const [
+                                      PopupMenuItem(
+                                        value: "discount", // ✅ FIXED VALUE
+                                        child: Text("View Discount"),
                                       ),
-                                      const PopupMenuItem(
-                                        value: "View MRP Details",
+                                      PopupMenuItem(
+                                        value: "mrp", // ✅ FIXED VALUE
                                         child: Text("MRP Details"),
                                       ),
                                     ],
+
                                     child: const Icon(Icons.visibility, color: Colors.blue),
                                   ),
                                 ),

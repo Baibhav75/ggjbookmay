@@ -237,10 +237,14 @@ class _SalePurchaseInvoicePageState
                             DataColumn(label: Text("View")),
                           ],
 
-                          rows: filteredList.map((e) {
+                          rows: List.generate(filteredList.length, (index) {
+                            final e = filteredList[index];
+
                             return DataRow(cells: [
 
-                              DataCell(Text(e.srNo.toString())),
+                              /// 🔥 LOOP SR NO
+                              DataCell(Text("${index + 1}")),
+
                               DataCell(Text(e.billNo)),
 
                               DataCell(

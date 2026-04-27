@@ -79,15 +79,20 @@ class _SaleSuperBrandBillDetailsScreenState
           int totalQty = data.items.fold(0, (sum, e) => sum + e.qty);
 
           return SingleChildScrollView(
-            child: Container(
-              margin: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.black),
-                color: Colors.white,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+              scrollDirection: Axis.horizontal,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: SizedBox(
+                  width: 1000, // must for horizontal scroll
+                  child: Container(
+                    margin: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.black),
+                      color: Colors.white,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                   /// 🔶 HEADER
                   Container(
                     width: double.infinity,
@@ -103,7 +108,7 @@ class _SaleSuperBrandBillDetailsScreenState
                               'assets/icon/gj5.png',
                               height: 40,
                               errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(Icons.menu_book, size: 40),
+                                  const Icon(Icons.menu_book, size: 40, color: Colors.brown,),
                             ),
                             const Text("BOOK WORLD",
                                 style: TextStyle(
@@ -282,6 +287,8 @@ class _SaleSuperBrandBillDetailsScreenState
                 ],
               ),
             ),
+          ),
+          ),
           );
         },
       ),

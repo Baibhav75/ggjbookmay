@@ -11,6 +11,7 @@ class NewRecoverBalanceScreen extends StatefulWidget {
   @override
   State<NewRecoverBalanceScreen> createState() =>
       _NewRecoverBalanceScreenState();
+
 }
 
 class _NewRecoverBalanceScreenState
@@ -29,52 +30,27 @@ class _NewRecoverBalanceScreenState
 
   ScrollController _scrollController = ScrollController();
 
-  int page = 1;
-  bool isFetchingMore = false;
-  bool hasMore = true;
   @override
   void initState() {
     super.initState();
     loadData();
-
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels ==
-          _scrollController.position.maxScrollExtent) {
-
-        if (hasMore) {
-          loadData(isLoadMore: true); // ✅ lazy load trigger
-        }
-      }
-    });
   }
 
-  Future<void> loadData({bool isLoadMore = false}) async {
+  Future<void> loadData() async {
+    setState(() => isLoading = true);
 
-    if (isLoadMore == false) {
-      isLoading = true;
-      setState(() {});
-    }
-
-    final data = await NewRecoverBalanceService.fetchData(page);
+    final data = await NewRecoverBalanceService.fetchData(1);
 
     if (data.isNotEmpty) {
-      if (isLoadMore) {
-        list.addAll(data);
-      } else {
-        list = data;
-      }
-
-      page++; // next page
-    } else {
-      hasMore = false;
+      list = data;
     }
 
     calculateTotals();
 
-    setState(() {
-      isLoading = false; // ✅ correct
-    });
+    setState(() => isLoading = false);
   }
+
+
   void calculateTotals() {
     totalOpening = 0;
     totalDebit = 0;
@@ -183,20 +159,9 @@ class _NewRecoverBalanceScreenState
                           Flexible( // ✅ IMPORTANT CHANGE
                             child: ListView.builder(
                               controller: _scrollController, // ✅ ADD THIS LINE
-                              itemCount: list.length + (hasMore ? 1 : 0), // ✅ CHANGE THIS LINE
+                              itemCount: list.length,
 
                               itemBuilder: (context, index) {
-
-                                /// 🔥 ADD THIS BLOCK HERE (TOP of itemBuilder)
-                                if (index == list.length) {
-                                  return const Padding(
-                                    padding: EdgeInsets.all(10),
-                                    child: Center(
-                                      child: CircularProgressIndicator(),
-                                    ),
-                                  );
-                                }
-
                                 final item = list[index];
                                 return InkWell(
                                     onTap: () {
@@ -284,6 +249,39 @@ class _NewRecoverBalanceScreenState
           ),
         ],
       ),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            mini: true,
+            onPressed: () {
+              _scrollController.animateTo(
+                0,
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeInOut,
+              );
+            },
+            child: const Icon(Icons.arrow_upward),
+          ),
+          const SizedBox(height: 10),
+          FloatingActionButton(
+            mini: true,
+            onPressed: () {
+              _scrollController.animateTo(
+                _scrollController.position.maxScrollExtent,
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeInOut,
+              );
+            },
+            child: const Icon(Icons.arrow_downward),
+          ),
+        ],
+      ),
     );
+  }
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 }

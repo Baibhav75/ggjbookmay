@@ -47,5 +47,16 @@ class ApiConstants {
   // new recover Balance
   static const String newRecoverBalance =
       "$baseUrl/recovery/GetNewRecoverBalance";
+//Mpin
+  static const String adminLogin = "$baseUrl/CreateMPI/AdminLogin";
+// Sample Not For Sale ReturnDetails
+  static String sampleNotSaleReturnDetails(String billNo) =>
+      "$baseUrl/SampleReturn/ViewSaleSampleNotForSaleReturnInvoice?BillNo=$billNo";
 
+/// 🔥 SALE RETURN SAMPLE (BillNo wise)
+static String saleReturnSample(String billNo) =>
+"$baseUrl/SaleReturnSample/ViewSaleReturnSample?billNo=$billNo";
 }
+
+
+
