@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../BilingPurchase/purchaseNotForSale.dart';
 import '../BilingPurchase/PurchaseSampleRevenew.dart';
 import '../BilingPurchase/PurchaseInvoice.dart';
+import '../Sale/purchaseHistoryClubView.dart';
 import '../Sale/salePurchaseInvoice.dart';
 import 'PubchaseEnterInvoice.dart';
 import 'PurchaseNotForSaleScreen.dart';
@@ -68,15 +69,15 @@ class PurchaseManagementPage extends StatelessWidget {
                 _purchaseItem(
                   context,
                   3,
-                  "Purchase Invoice",
+                  "Purchase Invoice Individual ",
                   const SalePurchaseInvoiceHistory(),
                 ),
 
                 _purchaseItem(
                   context,
                   4,
-                  "Debit Note Entry",
-                  const SalePurchaseInvoiceHistory(), // change page if different
+                  "Purchase Club View ",
+                  const SalePurchaseClubInvoiceHistory(),
                 ),
               ],
             ),

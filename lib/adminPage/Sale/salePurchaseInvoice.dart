@@ -97,7 +97,7 @@ class _SalePurchaseInvoicePageState
     return Scaffold(
 
       appBar: AppBar(
-        title: const Text("Purchase History"),
+        title: const Text("Purchase Invoice Individual"),
         backgroundColor: const Color(0xFF6B46C1),
         foregroundColor: Colors.white,
 

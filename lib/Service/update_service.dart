@@ -41,11 +41,11 @@ class UpdateService {
     if (!context.mounted) return;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _showUpdateDialog(context, url);
+      showUpdateDialog(context, url);
     });
   }
 
-  static void _showUpdateDialog(BuildContext context, String url) {
+  static void showUpdateDialog(BuildContext context, String url) {
     String todayDate = getFormattedDate(); // 📅 get date
 
     showDialog(

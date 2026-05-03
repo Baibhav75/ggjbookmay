@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'home_screen.dart';
 import 'package:bookworld/Service/secure_storage_service.dart';
 import 'package:bookworld/Service/permission_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '/Service/update_service.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:url_launcher/url_launcher.dart';
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
 
@@ -25,7 +26,7 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
 
-    // Animation Controller (slower for clarity)
+    // Animation Controller
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2800),
@@ -75,11 +76,10 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
 
-    // 3️⃣ Animation start
     _controller.forward();
 
+    _initFCM();
     _checkPermissionAndProceed();
-
   }
 
   Future<void> _checkPermissionAndProceed() async {
@@ -100,6 +100,8 @@ class _SplashScreenState extends State<SplashScreen>
     await Future.delayed(const Duration(seconds: 3));
 
     if (!mounted) return;
+
+    await UpdateService.checkForUpdate(context);
 
     final initialScreen = await _storageService.getInitialScreen();
 
@@ -265,6 +267,50 @@ class _SplashScreenState extends State<SplashScreen>
             ],
           ),
     );
+  }
+
+  Future<void> _initFCM() async {
+    await FirebaseMessaging.instance.requestPermission();
+    await FirebaseMessaging.instance.subscribeToTopic("all_users");
+
+    print("Subscribed to all_users");
+
+    // 1. Foreground messages
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      print("Foreground Message Received: ${message.notification?.title}");
+
+      final url = message.data['url'];
+      final isUpdate = message.data['type'] == 'update' ||
+          (message.notification?.title?.toLowerCase().contains('update') ?? false);
+
+      if (isUpdate && url != null && url.isNotEmpty) {
+        UpdateService.showUpdateDialog(context, url);
+      }
+    });
+
+    // 2. Background click (when app is in background but not closed)
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      final url = message.data['url'];
+      if (url != null && url.isNotEmpty) {
+        launchUrl(
+          Uri.parse(url),
+          mode: LaunchMode.externalApplication,
+        );
+      }
+    });
+
+    // 3. App closed case (initial message)
+    FirebaseMessaging.instance.getInitialMessage().then((message) {
+      if (message != null) {
+        final url = message.data['url'];
+        if (url != null && url.isNotEmpty) {
+          launchUrl(
+            Uri.parse(url),
+            mode: LaunchMode.externalApplication,
+          );
+        }
+      }
+    });
   }
 
 }

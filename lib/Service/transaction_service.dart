@@ -46,7 +46,7 @@ class TransactionService {
       ).timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
-        final List<dynamic> responseData = json.decode(response.body);
+        final dynamic responseData = json.decode(response.body);
 
         // Update cache
         _cache[cacheKey] = {

@@ -83,14 +83,17 @@ class _DayBookHistoryState extends State<DayBookHistory> {
   }
 
   void _initializeData() {
-    // Default: Show all records without filtering
-    _currentDateRange = null;
+    // Default: Show today's records. Fetching all causes timeout issues.
+    _selectedFilter = 'Today';
+    _currentDateRange = _getDateRangeForFilter('Today');
     _loadTransactions();
   }
 
   Future<void> _loadTransactions({bool forceRefresh = false}) async {
-    _isLoading.value = true;
-    _errorMessage.value = '';
+    if (mounted) {
+      _isLoading.value = true;
+      _errorMessage.value = '';
+    }
 
     try {
       final response = await _transactionService.getTransactions(
@@ -115,9 +118,8 @@ class _DayBookHistoryState extends State<DayBookHistory> {
         });
       }
     } catch (e) {
-      _errorMessage.value = e.toString();
-
       if (mounted) {
+        _errorMessage.value = e.toString();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${e.toString()}'),
@@ -127,7 +129,9 @@ class _DayBookHistoryState extends State<DayBookHistory> {
         );
       }
     } finally {
-      _isLoading.value = false;
+      if (mounted) {
+        _isLoading.value = false;
+      }
     }
   }
 

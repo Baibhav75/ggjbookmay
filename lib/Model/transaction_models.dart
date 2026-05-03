@@ -4,10 +4,18 @@ class TransactionResponse {
 
   TransactionResponse({required this.data});
 
-  factory TransactionResponse.fromJson(List<dynamic> json) {
-    return TransactionResponse(
-      data: json.map((day) => DayBookData.fromJson(day)).toList(),
-    );
+  factory TransactionResponse.fromJson(dynamic json) {
+    if (json is Map<String, dynamic>) {
+      final List<dynamic> dataList = json['Data'] ?? json['data'] ?? [];
+      return TransactionResponse(
+        data: dataList.map((day) => DayBookData.fromJson(day)).toList(),
+      );
+    } else if (json is List) {
+      return TransactionResponse(
+        data: json.map((day) => DayBookData.fromJson(day)).toList(),
+      );
+    }
+    return TransactionResponse(data: []);
   }
 
   // Helper method to get all transactions flattened
