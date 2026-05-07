@@ -102,18 +102,22 @@ class _DayBookHistoryState extends State<DayBookHistory> {
         forceRefresh: forceRefresh,
       );
 
-      final allTransactions = response.getAllTransactions();
+      // Apply client-side filtering to the day-wise data to ensure accuracy
+      TransactionResponse processedResponse = response;
+      if (_currentDateRange != null) {
+        final filteredData = response.data.where((dayData) {
+          return _isDateInRange(dayData.date, _currentDateRange!);
+        }).toList();
+        processedResponse = TransactionResponse(data: filteredData);
+      }
 
-      // Apply client-side date filtering only if a filter is selected
-      final filteredByDate = _currentDateRange != null
-          ? _filterTransactionsByDateRange(allTransactions, _currentDateRange!)
-          : allTransactions; // Show all if no filter selected
+      final allTransactions = processedResponse.getAllTransactions();
 
       if (mounted) {
         setState(() {
-          _transactionResponse = response; // Store full response for balance access
-          _allTransactions = filteredByDate;
-          _filteredTransactions = filteredByDate;
+          _transactionResponse = processedResponse;
+          _allTransactions = allTransactions;
+          _filteredTransactions = allTransactions;
           _visibleGroupsLimit = _groupsBatchSize; // Reset lazy loading limit on new fetch
         });
       }
@@ -147,13 +151,9 @@ class _DayBookHistoryState extends State<DayBookHistory> {
         return DateTimeRange(start: todayStart, end: todayEnd);
 
       case 'Weekly':
-      // Current week: Monday to Sunday (or today if today is before Sunday)
-        final daysFromMonday = now.weekday - 1; // Monday = 0, Sunday = 6
-        final startOfWeek = todayStart.subtract(Duration(days: daysFromMonday));
-        final endOfWeekDate = startOfWeek.add(const Duration(days: 6));
-        // Use today if it's before the end of the week, otherwise use end of week
-        final endDate = endOfWeekDate.isAfter(now) ? now : endOfWeekDate;
-        return DateTimeRange(start: startOfWeek, end: _getEndOfDay(endDate));
+        // Last 7 days including today
+        final startOfLastWeek = todayStart.subtract(const Duration(days: 6));
+        return DateTimeRange(start: startOfLastWeek, end: todayEnd);
 
       case 'Monthly':
       // Current month only (from start of month to today)
@@ -185,17 +185,36 @@ class _DayBookHistoryState extends State<DayBookHistory> {
     final rangeEnd = dateRange.end;
 
     return transactions.where((transaction) {
-      try {
-        final transactionDate = DateTime.parse(transaction.createdDateTime);
+      final transactionDate = _parseDateTime(transaction.createdDateTime);
+      if (transactionDate == null) return false;
 
+      // Compare only the date part to ensure inclusivity of the range
+      final txDateOnly = DateTime(transactionDate.year, transactionDate.month, transactionDate.day);
+      final rangeStartOnly = DateTime(rangeStart.year, rangeStart.month, rangeStart.day);
+      final rangeEndOnly = DateTime(rangeEnd.year, rangeEnd.month, rangeEnd.day);
 
-        return !transactionDate.isBefore(rangeStart) &&
-            !transactionDate.isAfter(rangeEnd);
-      } catch (e) {
-        // If date parsing fails, exclude the transaction
-        return false;
-      }
+      return !txDateOnly.isBefore(rangeStartOnly) &&
+          !txDateOnly.isAfter(rangeEndOnly);
     }).toList();
+  }
+
+  /// Robustly parse date time strings from API
+  DateTime? _parseDateTime(String? dateString) {
+    if (dateString == null || dateString.isEmpty) return null;
+    try {
+      if (dateString.contains('T')) {
+        return DateTime.parse(dateString);
+      }
+      // Try space separator: 2024-05-04 12:34:56
+      return DateTime.parse(dateString.replaceFirst(' ', 'T'));
+    } catch (e) {
+      try {
+        // Fallback for yyyy-MM-dd
+        return DateFormat('yyyy-MM-dd').parse(dateString);
+      } catch (_) {
+        return null;
+      }
+    }
   }
   void _filterTransactions() {
     final query = _searchController.text.toLowerCase().trim();
@@ -262,7 +281,7 @@ class _DayBookHistoryState extends State<DayBookHistory> {
     return (debit: totalDebit, credit: totalCredit);
   }
 
-  ({double todayOpeningBalance, double nextDayFinalBalance})? _getTodayBalances() {
+  ({double openingBalance, double nextDayFinalBalance})? _getTodayBalances() {
     if (_transactionResponse == null || _transactionResponse!.data.isEmpty) {
       return null;
     }
@@ -300,7 +319,7 @@ class _DayBookHistoryState extends State<DayBookHistory> {
 
     if (targetDayData != null) {
       return (
-        todayOpeningBalance: targetDayData.todayOpeningBalance,
+        openingBalance: targetDayData.openingBalance,
         nextDayFinalBalance: targetDayData.nextDayFinalBalance,
       );
     }
@@ -355,30 +374,18 @@ class _DayBookHistoryState extends State<DayBookHistory> {
   }
 
   String _formatDateTime(String dateTimeString) {
-    try {
-      final DateTime dateTime = DateTime.parse(dateTimeString);
-      return DateFormat('dd-MMM-yyyy HH:mm').format(dateTime);
-    } catch (e) {
-      return dateTimeString;
-    }
+    final dateTime = _parseDateTime(dateTimeString);
+    if (dateTime == null) return dateTimeString;
+    return DateFormat('dd-MMM-yyyy HH:mm').format(dateTime);
   }
 
 
 
 
   String _formatLongDate(String dateString) {
-    try {
-      DateTime dateTime;
-      if (dateString.contains('T')) {
-        dateTime = DateTime.parse(dateString);
-      } else {
-        // Handle common formats or simplified date strings
-        dateTime = DateFormat('yyyy-MM-dd').parse(dateString);
-      }
-      return DateFormat('dd-MMM-yyyy').format(dateTime);
-    } catch (e) {
-      return dateString;
-    }
+    final dateTime = _parseDateTime(dateString);
+    if (dateTime == null) return dateString;
+    return DateFormat('dd-MMM-yyyy').format(dateTime);
   }
 
   void _handleRefresh() {
@@ -436,6 +443,7 @@ class _DayBookHistoryState extends State<DayBookHistory> {
           Expanded(child: _buildContent()),
         ],
       ),
+      floatingActionButton: _buildFloatingScrollButtons(),
     );
   }
 
@@ -636,7 +644,7 @@ class _DayBookHistoryState extends State<DayBookHistory> {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    'Opening: ${_formatCurrency(balances.todayOpeningBalance)}',
+                    'Opening: ${_formatCurrency(balances.openingBalance)}',
                     style: TextStyle(
                       color: Colors.blue[700],
                       fontSize: 12,
@@ -929,7 +937,7 @@ class _DayBookHistoryState extends State<DayBookHistory> {
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey[700]),
           ),
           Text(
-            _formatCurrency(dayData.todayOpeningBalance),
+            _formatCurrency(dayData.openingBalance),
             style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 13,
@@ -953,7 +961,7 @@ class _DayBookHistoryState extends State<DayBookHistory> {
       child: Row(
         children: [
           _buildCell('$srNo', _colSrWidth, align: TextAlign.center),
-          _buildCell(_formatLongDate(tx.createdDateTime), _colDateWidth, align: TextAlign.center),
+          _buildCell(_formatDateTime(tx.createdDateTime), _colDateWidth, align: TextAlign.center),
           _buildCell(tx.mobileNo ?? '-', _colMobileWidth, align: TextAlign.center, textColor: Colors.blue[800]),
           _buildCell(tx.particularName, _colParticularWidth),
           _buildCell(tx.debit != null && tx.debit! > 0 ? _formatCurrency(tx.debit!) : '', _colAmountWidth, align: TextAlign.right, textColor: Colors.red[700], isBold: true),
@@ -1102,6 +1110,55 @@ class _DayBookHistoryState extends State<DayBookHistory> {
           mobileNo: tx.mobileNo!,
         ),
       ),
+    );
+  }
+
+  Widget _buildFloatingScrollButtons() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        FloatingActionButton.small(
+          onPressed: () {
+            _verticalScrollController.animateTo(
+              0,
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeInOut,
+            );
+          },
+          heroTag: 'btn_up',
+          backgroundColor: Colors.blue[900],
+          child: const Icon(Icons.keyboard_arrow_up, color: Colors.white),
+        ),
+        const SizedBox(height: 12),
+        FloatingActionButton.small(
+          onPressed: () {
+            if (_verticalScrollController.hasClients) {
+              if (_transactionResponse != null && _visibleGroupsLimit < _transactionResponse!.data.length) {
+                setState(() {
+                  _visibleGroupsLimit = _transactionResponse!.data.length;
+                });
+                // Wait for the UI to update with all items before scrolling
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _verticalScrollController.animateTo(
+                    _verticalScrollController.position.maxScrollExtent,
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeInOut,
+                  );
+                });
+              } else {
+                _verticalScrollController.animateTo(
+                  _verticalScrollController.position.maxScrollExtent,
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeInOut,
+                );
+              }
+            }
+          },
+          heroTag: 'btn_down',
+          backgroundColor: Colors.blue[900],
+          child: const Icon(Icons.keyboard_arrow_down, color: Colors.white),
+        ),
+      ],
     );
   }
 

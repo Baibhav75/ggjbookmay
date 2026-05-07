@@ -20,9 +20,7 @@ class SalePurchaseInvoiceHistory extends StatefulWidget {
       _SalePurchaseInvoicePageState();
 }
 
-class _SalePurchaseInvoicePageState
-    extends State<SalePurchaseInvoiceHistory> {
-
+class _SalePurchaseInvoicePageState extends State<SalePurchaseInvoiceHistory> {
   final ScrollController _verticalController = ScrollController();
   final ScrollController _horizontalController = ScrollController();
 
@@ -82,8 +80,7 @@ class _SalePurchaseInvoicePageState
       final groups = item.groups.toLowerCase();
       final searchLower = query.toLowerCase();
 
-      return billNo.contains(searchLower) ||
-          groups.contains(searchLower);
+      return billNo.contains(searchLower) || groups.contains(searchLower);
     }).toList();
 
     setState(() {
@@ -93,9 +90,7 @@ class _SalePurchaseInvoicePageState
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-
       appBar: AppBar(
         title: const Text("Purchase Invoice Individual"),
         backgroundColor: const Color(0xFF6B46C1),
@@ -109,7 +104,8 @@ class _SalePurchaseInvoicePageState
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const PurchaseInvoiceEntry(), // 👈 create this screen
+                  builder: (context) =>
+                      const PurchaseInvoiceEntry(), // 👈 create this screen
                 ),
               );
             },
@@ -119,18 +115,15 @@ class _SalePurchaseInvoicePageState
 
       body: Stack(
         children: [
-
           /// 🔶 MAIN UI
           Column(
             children: [
-
               /// 🔍 SEARCH + TOTAL
               Padding(
                 padding: const EdgeInsets.all(12),
 
                 child: Row(
                   children: [
-
                     /// SEARCH
                     Expanded(
                       flex: isSearching ? 5 : 3,
@@ -145,25 +138,23 @@ class _SalePurchaseInvoicePageState
                           /// ❌ clear button
                           suffixIcon: isSearching
                               ? IconButton(
-                            icon: const Icon(Icons.close),
-                            onPressed: () {
-                              searchController.clear();
-                              filterData("");
-                              searchFocus.unfocus();
-                            },
-                          )
+                                  icon: const Icon(Icons.close),
+                                  onPressed: () {
+                                    searchController.clear();
+                                    filterData("");
+                                    searchFocus.unfocus();
+                                  },
+                                )
                               : null,
 
                           filled: true,
                           fillColor: Colors.white,
                           border: OutlineInputBorder(
-                            borderRadius:
-                            BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
                       ),
                     ),
-
 
                     /// TOTAL BOX
                     if (!isSearching) ...[
@@ -171,17 +162,16 @@ class _SalePurchaseInvoicePageState
 
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.deepPurple.shade50,
-                          borderRadius:
-                          BorderRadius.circular(10),
-                          border: Border.all(
-                              color: Colors.deepPurple),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.deepPurple),
                         ),
                         child: Column(
-                          crossAxisAlignment:
-                          CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
                               "Total Amount",
@@ -190,8 +180,9 @@ class _SalePurchaseInvoicePageState
                             Text(
                               "₹ ${totalAmount.toStringAsFixed(2)}",
                               style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
                             ),
                           ],
                         ),
@@ -212,8 +203,7 @@ class _SalePurchaseInvoicePageState
                     child: Scrollbar(
                       controller: _horizontalController,
                       thumbVisibility: true,
-                      notificationPredicate:
-                          (notif) => notif.depth == 1,
+                      notificationPredicate: (notif) => notif.depth == 1,
 
                       child: SingleChildScrollView(
                         controller: _horizontalController,
@@ -221,190 +211,324 @@ class _SalePurchaseInvoicePageState
 
                         child: DataTable(
                           columnSpacing: 25,
-                          headingRowColor:
-                          MaterialStateProperty.all(
-                              Colors.deepPurple.shade50),
+                          headingRowColor: MaterialStateProperty.all(
+                            Colors.deepPurple.shade50,
+                          ),
 
                           columns: const [
-                            DataColumn(label: Text("SrNo")),
-                            DataColumn(label: Text("BillNo")),
+                            DataColumn(label: Text("Sr")),
+                            DataColumn(label: Text("Bill No")),
+                            DataColumn(label: Text("Supplier Invoice No")),
+                            DataColumn(label: Text("GR No")),
+                            DataColumn(label: Text("Box")),
                             DataColumn(label: Text("Publication")),
-                            DataColumn(label: Text("Date")),
+                            DataColumn(label: Text("Total Amount")),
                             DataColumn(label: Text("Groups")),
-                            DataColumn(label: Text("GRNO")),
-                            DataColumn(label: Text("BOX")),
-                            DataColumn(label: Text("Amount")),
-                            DataColumn(label: Text("View")),
+                            DataColumn(label: Text("Date")),
+                            DataColumn(label: Text("Back Date")),
+                            DataColumn(label: Text("Action")),
                           ],
 
                           rows: List.generate(filteredList.length, (index) {
                             final e = filteredList[index];
 
-                            return DataRow(cells: [
+                            return DataRow(
+                              cells: [
+                                /// Sr
+                                DataCell(Text("${index + 1}")),
 
-                              /// 🔥 LOOP SR NO
-                              DataCell(Text("${index + 1}")),
-
-                              DataCell(Text(e.billNo)),
-
-                              DataCell(
-                                SizedBox(
-                                  width: 200,
-                                  child: Text(e.publication),
-                                ),
-                              ),
-
-                              DataCell(
-                                  Text(e.date.split("T")[0])),
-
-                              DataCell(Text(e.groups)),
-
-                              DataCell(Text(e.grno ?? "-")),
-
-                              DataCell(Text(e.box ?? "-")),
-
-                              DataCell(
-                                Text(
-                                    "₹ ${e.totalAmount.toStringAsFixed(2)}"),
-                              ),
-
-                              DataCell(
-                                PopupMenuButton<String>(
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: const [
-                                      Icon(Icons.visibility, color: Colors.blue, size: 18),
-                                      SizedBox(width: 5),
-                                      Text(
-                                        "View",
-                                        style: TextStyle(color: Colors.blue, fontSize: 12),
+                                /// Bill No
+                                DataCell(
+                                  InkWell(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => PurchaseInvoicePage(
+                                            billNo: e.billNo.toString(),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: Text(
+                                      e.billNo,
+                                      style: const TextStyle(
+                                        color: Colors.blue,
+                                        fontWeight: FontWeight.bold,
+                                        decoration: TextDecoration.underline,
                                       ),
-                                    ],
+                                    ),
                                   ),
-
-                                  onSelected: (value) {
-                                    switch (value) {
-                                      case 'view_mrp_invoice':
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => PurchaseInvoicePage(
-                                              billNo: e.billNo.toString(),
-                                            ),
-                                          ),
-                                        );
-                                        break;
-
-                                      case 'edit_invoice':
-                                        print("Edit Invoice");
-                                        break;
-
-                                      case 'add_product':
-                                        print("Add Product");
-                                        break;
-
-                                      case 'view_image':
-                                        print("View Image");
-                                        break;
-
-                                      case 'company_discount':
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => ViewCompanyDiscountScreen(
-                                              billNo: e.billNo.toString(),
-                                            ),
-                                          ),
-                                        );
-                                        break;
-
-                                      case 'publication_discount':
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => PurchaseDetailsDiscountInvoiceScreen(
-                                              billNo: e.billNo.toString(),
-                                            ),
-                                          ),
-                                        );
-
-                                      case 'only_mrp':
-                                        print("Only MRP");
-                                        break;
-
-                                      case 'mix_report':
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => PurchaseMixReportScreen (
-                                              publicationId:e.publicationId,
-                                            ),
-                                          ),
-                                        );
-                                        break;
-
-                                      case 'stock_register':
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => StockRegisterScreen(
-                                              publicationId: e. publicationId.toString(),
-                                            ),
-                                          ),
-                                        );
-                                        break;
-
-                                      case 'mix_pub_disc':
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => GetMixReportPubDiscPage(
-                                              publicationId: e. publicationId.toString(),
-                                            ),
-                                          ),
-                                        );
-                                        break;
-
-                                      case 'mrp_ledger':
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) =>  PurchaseMrpLedgerScreen(
-                                              publicationId: e. publicationId.toString(),
-                                            ),
-
-                                          ),
-                                        );
-                                        break;
-
-                                      case 'company_ledger':
-                                        print("Company Ledger");
-                                        break;
-
-                                      case 'publication_ledger':
-                                        print("Publication Ledger");
-                                        break;
-                                    }
-                                  },
-
-                                  itemBuilder: (context) => [
-                                    _menuItem("View MRP Invoice", "view_mrp_invoice"),
-                                    _menuItem("Edit Invoice", "edit_invoice"),
-                                    _menuItem("Add New Product In Invoice", "add_product"),
-                                    _menuItem("View Invoice Image", "view_image"),
-                                    _menuItem("View Company Discount Invoice", "company_discount"),
-                                    _menuItem("View Publication Discount Invoice", "publication_discount"),
-                                    _menuItem("View Only MRP Invoice", "only_mrp"),
-                                    _menuItem("View MixReport", "mix_report"),
-                                    _menuItem("View Stock Register", "stock_register"),
-                                    _menuItem("View MixReport PubDisc", "mix_pub_disc"),
-                                    _menuItem("View MRP Ledger", "mrp_ledger"),
-                                    _menuItem("View Company Discount Ledger", "company_ledger"),
-                                    _menuItem("View Publication Discount Ledger", "publication_ledger"),
-                                  ],
                                 ),
-                              ),
-                            ]);
+
+                                /// Supplier Invoice No (SepBillNo)
+                                DataCell(Text(e.sepBillNo ?? "-")),
+
+                                /// GR No
+                                DataCell(
+                                  Text(
+                                    e.grno ?? "-",
+                                    style: const TextStyle(color: Colors.blue),
+                                  ),
+                                ),
+
+                                /// Box
+                                DataCell(Text(e.box ?? "-")),
+
+                                /// Publication
+                                DataCell(
+                                  SizedBox(
+                                    width: 200,
+                                    child: Text(
+                                      e.publication,
+                                      style: const TextStyle(
+                                        color: Colors.blue,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+
+                                /// Total Amount
+                                DataCell(
+                                  Text(
+                                    "₹ ${e.totalAmount.toStringAsFixed(2)}",
+                                    style: const TextStyle(
+                                      color: Colors.green,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+
+                                /// Groups
+                                DataCell(Text(e.groups)),
+
+                                /// Date
+                                DataCell(
+                                  Text(
+                                    e.date != null
+                                        ? "${e.date!.day}-${e.date!.month}-${e.date!.year}"
+                                        : "-",
+                                  ),
+                                ),
+
+                                /// Back Date
+                                DataCell(
+                                  Text(
+                                    e.backDate != null
+                                        ? "${e.backDate!.day}-${e.backDate!.month}-${e.backDate!.year}"
+                                        : "-",
+                                  ),
+                                ),
+
+                                DataCell(
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: PopupMenuButton<String>(
+                                      padding: EdgeInsets.zero, // 🔥 removes extra internal padding
+                                      child: const Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.visibility,
+                                            color: Colors.white,
+                                            size: 16, // 🔥 better size
+                                          ),
+                                          SizedBox(width: 6), // 🔥 reduced spacing
+                                          Text(
+                                            "View",
+                                            style: TextStyle(
+                                              color: Colors.white, // ❗ fix (was blue → invisible)
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+
+                                      onSelected: (value) {
+                                        switch (value) {
+                                          case 'view_mrp_invoice':
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) =>
+                                                    PurchaseInvoicePage(
+                                                      billNo: e.billNo
+                                                          .toString(),
+                                                    ),
+                                              ),
+                                            );
+                                            break;
+
+                                          case 'edit_invoice':
+                                            print("Edit Invoice");
+                                            break;
+
+                                          case 'add_product':
+                                            print("Add Product");
+                                            break;
+
+                                          case 'view_image':
+                                            print("View Image");
+                                            break;
+
+                                          case 'company_discount':
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) =>
+                                                    ViewCompanyDiscountScreen(
+                                                      billNo: e.billNo
+                                                          .toString(),
+                                                    ),
+                                              ),
+                                            );
+                                            break;
+
+                                          case 'publication_discount':
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) =>
+                                                    PurchaseDetailsDiscountInvoiceScreen(
+                                                      billNo: e.billNo
+                                                          .toString(),
+                                                    ),
+                                              ),
+                                            );
+
+                                          case 'only_mrp':
+                                            print("Only MRP");
+                                            break;
+
+                                          case 'mix_report':
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) =>
+                                                    PurchaseMixReportScreen(
+                                                      publicationId:
+                                                          e.publicationId,
+                                                    ),
+                                              ),
+                                            );
+                                            break;
+
+                                          case 'stock_register':
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) =>
+                                                    StockRegisterScreen(
+                                                      publicationId: e
+                                                          .publicationId
+                                                          .toString(),
+                                                    ),
+                                              ),
+                                            );
+                                            break;
+
+                                          case 'mix_pub_disc':
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) =>
+                                                    GetMixReportPubDiscPage(
+                                                      publicationId: e
+                                                          .publicationId
+                                                          .toString(),
+                                                    ),
+                                              ),
+                                            );
+                                            break;
+
+                                          case 'mrp_ledger':
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) =>
+                                                    PurchaseMrpLedgerScreen(
+                                                      publicationId: e
+                                                          .publicationId
+                                                          .toString(),
+                                                    ),
+                                              ),
+                                            );
+                                            break;
+
+                                          case 'company_ledger':
+                                            print("Company Ledger");
+                                            break;
+
+                                          case 'publication_ledger':
+                                            print("Publication Ledger");
+                                            break;
+                                        }
+                                      },
+
+                                      itemBuilder: (context) => [
+                                        _menuItem(
+                                          "View MRP Invoice",
+                                          "view_mrp_invoice",
+                                        ),
+                                        _menuItem(
+                                          "Edit Invoice",
+                                          "edit_invoice",
+                                        ),
+                                        _menuItem(
+                                          "Add New Product In Invoice",
+                                          "add_product",
+                                        ),
+                                        _menuItem(
+                                          "View Invoice Image",
+                                          "view_image",
+                                        ),
+                                        _menuItem(
+                                          "View Company Discount Invoice",
+                                          "company_discount",
+                                        ),
+                                        _menuItem(
+                                          "View Publication Discount Invoice",
+                                          "publication_discount",
+                                        ),
+                                        _menuItem(
+                                          "View Only MRP Invoice",
+                                          "only_mrp",
+                                        ),
+                                        _menuItem(
+                                          "View MixReport",
+                                          "mix_report",
+                                        ),
+                                        _menuItem(
+                                          "View Stock Register",
+                                          "stock_register",
+                                        ),
+                                        _menuItem(
+                                          "View MixReport PubDisc",
+                                          "mix_pub_disc",
+                                        ),
+                                        _menuItem(
+                                          "View MRP Ledger",
+                                          "mrp_ledger",
+                                        ),
+                                        _menuItem(
+                                          "View Company Discount Ledger",
+                                          "company_ledger",
+                                        ),
+                                        _menuItem(
+                                          "View Publication Discount Ledger",
+                                          "publication_ledger",
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
                           }).toList(),
                         ),
                       ),
@@ -419,11 +543,9 @@ class _SalePurchaseInvoicePageState
             Container(
               color: Colors.black.withOpacity(0.2),
               child: const Center(
-                child:SchoolLoader(size: 70,
-                  color: Colors.deepPurple,),
+                child: SchoolLoader(size: 70, color: Colors.deepPurple),
               ),
             ),
-
 
           /// 🔼 TOP BUTTON
           Positioned(
@@ -434,8 +556,7 @@ class _SalePurchaseInvoicePageState
               onTap: () {
                 _verticalController.animateTo(
                   0,
-                  duration:
-                  const Duration(milliseconds: 300),
+                  duration: const Duration(milliseconds: 300),
                   curve: Curves.easeIn,
                 );
               },
@@ -450,10 +571,8 @@ class _SalePurchaseInvoicePageState
               icon: Icons.arrow_downward,
               onTap: () {
                 _verticalController.animateTo(
-                  _verticalController
-                      .position.maxScrollExtent,
-                  duration:
-                  const Duration(milliseconds: 300),
+                  _verticalController.position.maxScrollExtent,
+                  duration: const Duration(milliseconds: 300),
                   curve: Curves.easeOut,
                 );
               },
@@ -465,10 +584,7 @@ class _SalePurchaseInvoicePageState
   }
 
   /// 🔘 SCROLL BUTTON
-  Widget _scrollBtn({
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
+  Widget _scrollBtn({required IconData icon, required VoidCallback onTap}) {
     return Material(
       elevation: 4,
       color: Colors.deepPurple,
@@ -485,9 +601,6 @@ class _SalePurchaseInvoicePageState
   }
 
   PopupMenuItem<String> _menuItem(String text, String value) {
-    return PopupMenuItem(
-      value: value,
-      child: Text(text),
-    );
+    return PopupMenuItem(value: value, child: Text(text));
   }
 }

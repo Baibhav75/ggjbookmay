@@ -21,6 +21,14 @@ class _PurchaseNotForSaleScreenState
   double grandTotal = 0;
 
   TextEditingController searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    searchController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -71,6 +79,46 @@ class _PurchaseNotForSaleScreenState
       appBar: AppBar(
         title: const Text("Purchase Not For Sale"),
         backgroundColor: Colors.deepPurple,
+        foregroundColor: Colors.white,
+      ),
+
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            heroTag: "btnUp",
+            mini: true,
+            backgroundColor: Colors.deepPurple,
+            foregroundColor: Colors.white,
+            onPressed: () {
+              if (_scrollController.hasClients) {
+                _scrollController.animateTo(
+                  0,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                );
+              }
+            },
+            child: const Icon(Icons.arrow_upward),
+          ),
+          const SizedBox(height: 10),
+          FloatingActionButton(
+            heroTag: "btnDown",
+            mini: true,
+            backgroundColor: Colors.deepPurple,
+            foregroundColor: Colors.white,
+            onPressed: () {
+              if (_scrollController.hasClients) {
+                _scrollController.animateTo(
+                  _scrollController.position.maxScrollExtent,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                );
+              }
+            },
+            child: const Icon(Icons.arrow_downward),
+          ),
+        ],
       ),
 
       body: isLoading
@@ -135,6 +183,7 @@ class _PurchaseNotForSaleScreenState
               child: SizedBox(
                 width: 800,
                 child: ListView.builder(
+                  controller: _scrollController,
                   itemCount: filteredList.length,
                   itemBuilder: (context, index) {
                     final item = filteredList[index];

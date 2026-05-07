@@ -52,8 +52,8 @@ class _SalePurchaseClubInvoiceHistoryState
 
       // Sort raw data by date (newest first)
       rawData.sort((a, b) {
-        DateTime? dateA = a.date != null ? DateTime.tryParse(a.date!) : null;
-        DateTime? dateB = b.date != null ? DateTime.tryParse(b.date!) : null;
+        DateTime? dateA = a.date;
+        DateTime? dateB = b.date;
         if (dateA != null && dateB != null) return dateB.compareTo(dateA);
         if (dateA != null) return -1;
         if (dateB != null) return 1;
@@ -78,37 +78,31 @@ class _SalePurchaseClubInvoiceHistoryState
     for (var item in list) {
       if (map.containsKey(item.publicationId)) {
         final existing = map[item.publicationId]!;
+
         map[item.publicationId] = PurchaseData(
+          id: existing.id,
           srNo: existing.srNo,
           billNo: existing.billNo,
           publication: existing.publication,
           publicationId: existing.publicationId,
-          date: existing.date,
-          groups: existing.groups,
+          partyId: existing.partyId,
+          party: existing.party,
           grno: existing.grno,
           box: existing.box,
           totalAmount: existing.totalAmount + item.totalAmount,
+          date: existing.date,
+          backDate: existing.backDate,
+          groups: existing.groups,
+          sepBillNo: existing.sepBillNo,
         );
       } else {
-        map[item.publicationId] = PurchaseData(
-          srNo: item.srNo,
-          billNo: item.billNo,
-          publication: item.publication,
-          publicationId: item.publicationId,
-          date: item.date,
-          groups: item.groups,
-          grno: item.grno,
-          box: item.box,
-          totalAmount: item.totalAmount,
-        );
+        map[item.publicationId] = item;
       }
     }
 
-    List<PurchaseData> clubbedList = map.values.toList();
-    clubbedList.sort((a, b) =>
-        a.publication.toLowerCase().compareTo(b.publication.toLowerCase()));
-
-    return clubbedList;
+    return map.values.toList()
+      ..sort((a, b) =>
+          a.publication.toLowerCase().compareTo(b.publication.toLowerCase()));
   }
 
   void search(String value) {

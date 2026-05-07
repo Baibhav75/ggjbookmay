@@ -13,7 +13,6 @@ class NewRecoverBalanceScreen extends StatefulWidget {
       _NewRecoverBalanceScreenState();
 
 }
-
 class _NewRecoverBalanceScreenState
     extends State<NewRecoverBalanceScreen> {
 
