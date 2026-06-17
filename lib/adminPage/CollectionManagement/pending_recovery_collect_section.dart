@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/otp_serviceGenerater.dart';
+import '../../services/otp_pending_collection_service.dart';
 import '/Model/recovery_pending_list_model.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math';
@@ -24,12 +25,16 @@ class PendingRecoveryCollectSection {
         ? selectedItems.first.receivedBy
         : "Agent";
 
+    String agentMobile = selectedItems.first.mobile.isNotEmpty
+        ? selectedItems.first.mobile
+        : "";
+
     /// 🔥 Controllers
     TextEditingController amountController =
     TextEditingController(text: total.toStringAsFixed(2));
 
     TextEditingController mobileController =
-    TextEditingController(text: "9523070151");
+    TextEditingController(text: agentMobile);
 
     TextEditingController vouchersController =
     TextEditingController(text: vouchers);
@@ -197,18 +202,13 @@ class PendingRecoveryCollectSection {
                                 return;
                               }
 
-                              /// 🔹 Generate OTP HERE (UI side)
-                              final random = Random();
-                              generatedOtp =
-                                  (100000 + random.nextInt(900000)).toString();
-
-                              /// 🔹 Send OTP
-                              bool success = await Fast2SmsService.sendOtp(
-                                phone: mobileController.text.trim(),
-                                otp: generatedOtp!,
+                              /// 🔹 Send OTP via API
+                              final otpResponse = await OtpPendingCollectionService.sendOtp(
+                                mobileController.text.trim(),
                               );
 
-                              if (success) {
+                              if (otpResponse != null && otpResponse.success) {
+                                generatedOtp = otpResponse.otp;
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(content: Text("OTP Sent ✅")),
                                 );
@@ -253,25 +253,24 @@ class PendingRecoveryCollectSection {
                             onPressed: isSubmitting
                                 ? null
                                 : () async {
-                              /// 🔹 Validate OTP
-                              if (otpController.text
-                                  .trim() !=
-                                  generatedOtp) {
-                                ScaffoldMessenger.of(context)
-                                    .showSnackBar(
-                                  const SnackBar(
-                                      content: Text(
-                                          "Invalid OTP ❌")),
-                                );
-                                return;
-                              }
-
                               setPopupState(() =>
                               isSubmitting = true);
 
-                              await Future.delayed(
-                                  const Duration(
-                                      seconds: 1));
+                              /// 🔹 Validate OTP via API
+                              bool isVerified = await OtpPendingCollectionService.verifyOtp(
+                                mobileController.text.trim(),
+                                otpController.text.trim(),
+                              );
+
+                              if (!isVerified) {
+                                setPopupState(() =>
+                                isSubmitting = false);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text("Invalid OTP ❌")),
+                                );
+                                return;
+                              }
 
                               setPopupState(() =>
                               isSubmitting = false);
