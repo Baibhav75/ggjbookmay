@@ -157,6 +157,13 @@ class _RecoveryPendingScreenState extends State<RecoveryPendingScreen> {
                     PendingRecoveryCollectSection.show(
                       context: context,
                       selectedItems: selectedItems,
+                      onSuccess: () {
+                        setState(() {
+                          selectedIndexes.clear();
+                          selectedRecoveryBy = null;
+                        });
+                        fetchData();
+                      },
                     );
                   }
                       : null,

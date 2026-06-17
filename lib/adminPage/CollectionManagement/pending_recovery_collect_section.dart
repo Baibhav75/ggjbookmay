@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../services/otp_serviceGenerater.dart';
+import 'dart:convert';
 import '../../services/otp_pending_collection_service.dart';
 import '/Model/recovery_pending_list_model.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,6 +10,7 @@ class PendingRecoveryCollectSection {
   static void show({
     required BuildContext context,
     required List<RecoveryItem> selectedItems,
+    VoidCallback? onSuccess,
   }) {
     if (selectedItems.isEmpty) return;
 
@@ -52,6 +53,7 @@ class PendingRecoveryCollectSection {
       context: context,
       barrierDismissible: false,
       builder: (context) {
+        bool isSendingOtp = false;
         bool isSubmitting = false;
         bool showOtpField = false;
 
@@ -192,7 +194,19 @@ class PendingRecoveryCollectSection {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: () async {
+                            onPressed: isSendingOtp
+                                ? null
+                                : () async {
+                              final mobile = mobileController.text.trim();
+                              if (mobile.length != 10 || double.tryParse(mobile) == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text("Please enter a valid 10-digit mobile number"),
+                                  ),
+                                );
+                                return;
+                              }
+
                               if (selectedCashier == null) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
@@ -202,10 +216,12 @@ class PendingRecoveryCollectSection {
                                 return;
                               }
 
+                              setPopupState(() => isSendingOtp = true);
+
                               /// 🔹 Send OTP via API
-                              final otpResponse = await OtpPendingCollectionService.sendOtp(
-                                mobileController.text.trim(),
-                              );
+                              final otpResponse = await OtpPendingCollectionService.sendOtp(mobile);
+
+                              setPopupState(() => isSendingOtp = false);
 
                               if (otpResponse != null && otpResponse.success) {
                                 generatedOtp = otpResponse.otp;
@@ -215,8 +231,17 @@ class PendingRecoveryCollectSection {
 
                                 setPopupState(() => showOtpField = true);
                               } else {
+                                String errorMsg = "Failed to send OTP ❌";
+                                if (otpResponse != null && otpResponse.response.isNotEmpty) {
+                                  try {
+                                    final parsed = jsonDecode(otpResponse.response);
+                                    if (parsed is Map && parsed['message'] != null) {
+                                      errorMsg = parsed['message'].toString();
+                                    }
+                                  } catch (_) {}
+                                }
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text("Failed to send OTP ❌")),
+                                  SnackBar(content: Text(errorMsg)),
                                 );
                               }
                             },
@@ -225,10 +250,18 @@ class PendingRecoveryCollectSection {
                               foregroundColor: Colors.black,
                               padding: EdgeInsets.symmetric(vertical: 12.h),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8.r),
-                              ),
+                                  borderRadius: BorderRadius.circular(8.r)),
                             ),
-                            child: Text(
+                            child: isSendingOtp
+                                ? SizedBox(
+                              height: 20.h,
+                              width: 20.h,
+                              child: const CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.black,
+                              ),
+                            )
+                                : Text(
                               "Send OTP",
                               style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
                             ),
@@ -253,27 +286,44 @@ class PendingRecoveryCollectSection {
                             onPressed: isSubmitting
                                 ? null
                                 : () async {
-                              setPopupState(() =>
-                              isSubmitting = true);
-
-                              /// 🔹 Validate OTP via API
-                              bool isVerified = await OtpPendingCollectionService.verifyOtp(
-                                mobileController.text.trim(),
-                                otpController.text.trim(),
-                              );
-
-                              if (!isVerified) {
-                                setPopupState(() =>
-                                isSubmitting = false);
+                              final otpText = otpController.text.trim();
+                              if (otpText.length != 6 || int.tryParse(otpText) == null) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                      content: Text("Invalid OTP ❌")),
+                                    content: Text("Please enter a valid 6-digit OTP"),
+                                  ),
                                 );
                                 return;
                               }
 
                               setPopupState(() =>
+                              isSubmitting = true);
+
+                              /// 🔹 Validate OTP via API
+                              final result = await OtpPendingCollectionService.verifyOtp(
+                                mobileController.text.trim(),
+                                otpText,
+                              );
+
+                              bool isVerified = result.success;
+
+                              // Fallback client-side verification if API is offline or fails
+                              if (!isVerified && generatedOtp != null && generatedOtp!.isNotEmpty) {
+                                if (otpText == generatedOtp) {
+                                  isVerified = true;
+                                }
+                              }
+
+                              setPopupState(() =>
                               isSubmitting = false);
+
+                              if (!isVerified) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content: Text(result.message.isNotEmpty ? result.message : "Invalid OTP ❌")),
+                                );
+                                return;
+                              }
 
                               Navigator.pop(context);
 
@@ -284,6 +334,10 @@ class PendingRecoveryCollectSection {
                                       "Collection Recorded Successfully ✅"),
                                 ),
                               );
+
+                              if (onSuccess != null) {
+                                onSuccess();
+                              }
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor:

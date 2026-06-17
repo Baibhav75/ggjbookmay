@@ -3,8 +3,8 @@ import 'package:http/http.dart' as http;
 import '../Model/otp_pending_collection_model.dart';
 
 class OtpPendingCollectionService {
-  static const String _baseUrl = 'https://g17bookworld.com//api/SendOtp';
-  static const String _verifyUrl = 'https://g17bookworld.com//api/verifyOtp';
+  static const String _baseUrl = 'https://g17bookworld.com/api/SendOtp';
+  static const String _verifyUrl = 'https://g17bookworld.com/api/verifyOtp';
 
   static Future<OtpPendingCollectionModel?> sendOtp(String mobileNumber) async {
     try {
@@ -31,7 +31,7 @@ class OtpPendingCollectionService {
     }
   }
 
-  static Future<bool> verifyOtp(String mobileNumber, String otp) async {
+  static Future<({bool success, String message})> verifyOtp(String mobileNumber, String otp) async {
     try {
       final response = await http.post(
         Uri.parse(_verifyUrl),
@@ -46,14 +46,23 @@ class OtpPendingCollectionService {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        return data['success'] == true;
+        return (
+          success: data['success'] == true,
+          message: data['msg']?.toString() ?? 'OTP verified successfully.',
+        );
       } else {
         print("Failed to verify OTP: ${response.statusCode}");
-        return false;
+        return (
+          success: false,
+          message: "Failed to verify OTP (Status: ${response.statusCode})",
+        );
       }
     } catch (e) {
       print("Error verifying OTP: $e");
-      return false;
+      return (
+        success: false,
+        message: "Error verifying OTP: $e",
+      );
     }
   }
 }
