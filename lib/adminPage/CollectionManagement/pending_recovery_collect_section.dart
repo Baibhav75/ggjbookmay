@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import '../../services/otp_pending_collection_service.dart';
 import '/Model/recovery_pending_list_model.dart';
+import '/Model/cashier_model.dart';
+import '/Service/cashiername_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -47,7 +49,7 @@ class PendingRecoveryCollectSection {
     String? selectedCashier;
     String? generatedOtp;
 
-    List<String> cashiers = ["GOVIND JAISWAL ", "Rekha jaiswal"];
+    final cashierFuture = CashierService.getCashiers();
 
     showDialog(
       context: context,
@@ -146,36 +148,60 @@ class PendingRecoveryCollectSection {
 
                       SizedBox(height: 5.h),
 
-                      DropdownButtonFormField<String>(
-                        value: selectedCashier,
-                        hint: Text("-- Select Cashier --",
-                            style:
-                            GoogleFonts.poppins(fontSize: 13.sp)),
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius:
-                            BorderRadius.circular(8.r),
-                          ),
-                          isDense: true,
-                          prefixIcon: Icon(Icons.person,
-                              size: 20.sp,
-                              color: Colors.deepPurple),
-                          contentPadding:
-                          EdgeInsets.symmetric(
-                              horizontal: 10.w,
-                              vertical: 12.h),
-                        ),
-                        items: cashiers
-                            .map((c) => DropdownMenuItem(
-                          value: c,
-                          child: Text(c,
-                              style:
-                              GoogleFonts.poppins()),
-                        ))
-                            .toList(),
-                        onChanged: (val) =>
-                            setPopupState(
-                                    () => selectedCashier = val),
+                      FutureBuilder<List<CashierModel>>(
+                        future: cashierFuture,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
+                          }
+                          if (snapshot.hasError) {
+                            return Text(
+                              "Error loading cashiers",
+                              style: GoogleFonts.poppins(color: Colors.red, fontSize: 13.sp),
+                            );
+                          }
+                          final list = snapshot.data ?? [];
+                          if (list.isEmpty) {
+                            return Text(
+                              "No cashiers available",
+                              style: GoogleFonts.poppins(color: Colors.grey, fontSize: 13.sp),
+                            );
+                          }
+
+                          final hasSelected = list.any((c) => c.employeeId == selectedCashier);
+                          final currentValue = hasSelected ? selectedCashier : null;
+
+                          return DropdownButtonFormField<String>(
+                            value: currentValue,
+                            hint: Text("-- Select Cashier --",
+                                style: GoogleFonts.poppins(fontSize: 13.sp)),
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                              isDense: true,
+                              prefixIcon: Icon(Icons.person,
+                                  size: 20.sp,
+                                  color: Colors.deepPurple),
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 10.w,
+                                  vertical: 12.h),
+                            ),
+                            items: list.map((c) {
+                              return DropdownMenuItem<String>(
+                                value: c.employeeId,
+                                child: Text("${c.employeeName} (${c.employeeId})",
+                                    style: GoogleFonts.poppins()),
+                              );
+                            }).toList(),
+                            onChanged: (val) => setPopupState(() => selectedCashier = val),
+                          );
+                        },
                       ),
 
                       SizedBox(height: 15.h),
@@ -219,7 +245,8 @@ class PendingRecoveryCollectSection {
                               setPopupState(() => isSendingOtp = true);
 
                               /// 🔹 Send OTP via API
-                              final otpResponse = await OtpPendingCollectionService.sendOtp(mobile);
+                              final schoolId = selectedItems.isNotEmpty ? selectedItems.first.schoolId : "";
+                              final otpResponse = await OtpPendingCollectionService.sendOtp(mobile, schoolId);
 
                               setPopupState(() => isSendingOtp = false);
 
@@ -300,9 +327,16 @@ class PendingRecoveryCollectSection {
                               isSubmitting = true);
 
                               /// 🔹 Validate OTP via API
+                              final ids = selectedItems.map((e) => e.id.toString()).join(',');
+                              final schoolId = selectedItems.isNotEmpty ? selectedItems.first.schoolId : "";
+                              
                               final result = await OtpPendingCollectionService.verifyOtp(
-                                mobileController.text.trim(),
-                                otpText,
+                                ids: ids,
+                                schoolId: schoolId,
+                                otp: otpText,
+                                mobile: mobileController.text.trim(),
+                                staffId: selectedCashier ?? "",
+                                remarks: remarksController.text.trim(),
                               );
 
                               bool isVerified = result.success;

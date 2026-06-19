@@ -4,9 +4,9 @@ import '../Model/otp_pending_collection_model.dart';
 
 class OtpPendingCollectionService {
   static const String _baseUrl = 'https://g17bookworld.com/api/SendOtp';
-  static const String _verifyUrl = 'https://g17bookworld.com/api/verifyOtp';
+  static const String _verifyUrl = 'https://g17bookworld.com/api/recovery/collect-payments';
 
-  static Future<OtpPendingCollectionModel?> sendOtp(String mobileNumber) async {
+  static Future<OtpPendingCollectionModel?> sendOtp(String mobileNumber, String schoolId) async {
     try {
       final response = await http.post(
         Uri.parse(_baseUrl),
@@ -14,13 +14,18 @@ class OtpPendingCollectionService {
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
-          'mobile': mobileNumber,
+          'Mobile': mobileNumber,
+          'SchoolId': schoolId,
         }),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        return OtpPendingCollectionModel.fromJson(data);
+        return OtpPendingCollectionModel.fromJson(
+          data,
+          mobile: mobileNumber,
+          schoolId: schoolId,
+        );
       } else {
         print("Failed to send OTP: ${response.statusCode}");
         return null;
@@ -31,7 +36,14 @@ class OtpPendingCollectionService {
     }
   }
 
-  static Future<({bool success, String message})> verifyOtp(String mobileNumber, String otp) async {
+  static Future<({bool success, String message})> verifyOtp({
+    required String ids,
+    required String schoolId,
+    required String otp,
+    required String mobile,
+    required String staffId,
+    required String remarks,
+  }) async {
     try {
       final response = await http.post(
         Uri.parse(_verifyUrl),
@@ -39,8 +51,12 @@ class OtpPendingCollectionService {
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
-          'mobile': mobileNumber,
-          'otp': otp,
+          'Ids': ids,
+          'SchoolId': schoolId,
+          'OTP': otp,
+          'Mobile': mobile,
+          'StaffId': staffId,
+          'Remarks': remarks,
         }),
       );
 
@@ -48,13 +64,13 @@ class OtpPendingCollectionService {
         final data = jsonDecode(response.body);
         return (
           success: data['success'] == true,
-          message: data['msg']?.toString() ?? 'OTP verified successfully.',
+          message: data['msg']?.toString() ?? 'Payment collected successfully.',
         );
       } else {
-        print("Failed to verify OTP: ${response.statusCode}");
+        print("Failed to collect payment: ${response.statusCode}");
         return (
           success: false,
-          message: "Failed to verify OTP (Status: ${response.statusCode})",
+          message: "Failed to collect payment (Status: ${response.statusCode})",
         );
       }
     } catch (e) {

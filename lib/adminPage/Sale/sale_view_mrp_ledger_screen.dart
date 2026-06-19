@@ -292,7 +292,7 @@ class _SaleViewMRPLedgerScreenState
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (_) => SaleInvoiceDetailsScreen(
+                                          builder: (_) => SaleDetailsMrpScreen(
                                             billNo: billNo,
                                             date: formattedDate,
                                           ),

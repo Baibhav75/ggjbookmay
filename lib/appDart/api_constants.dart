@@ -56,6 +56,10 @@ class ApiConstants {
 /// 🔥 SALE RETURN SAMPLE (BillNo wise)
 static String saleReturnSample(String billNo) =>
 "$baseUrl/SaleReturnSample/ViewSaleReturnSample?billNo=$billNo";
+// getSaleInvoice
+  static String saleInvoice(String billNo) {
+    return "$baseUrl/GetSaleInvoiceByAgentComission/GetSaleInvoiceByAgentComission?billNo=$billNo";
+  }
 }
 
 

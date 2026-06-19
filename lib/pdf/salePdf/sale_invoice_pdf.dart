@@ -15,8 +15,10 @@ class SaleInvoicePdf {
 
     /// 🔹 GROUPING (Same as UI)
     Map<String, List<SaleInvoiceItem>> groupedItems = {};
+
     for (var item in data.items) {
-      groupedItems.putIfAbsent(item.publication, () => []).add(item);
+      String key = "${item.series}|${item.publication}";
+      groupedItems.putIfAbsent(key, () => []).add(item);
     }
 
     double totalQty = 0;
@@ -125,21 +127,25 @@ class SaleInvoicePdf {
 
               /// 🔹 GROUP DATA (Publication wise)
               ...groupedItems.entries.expand((entry) {
-                String publication = entry.key;
+                String series = entry.key.split('|')[0];
+                String publication = entry.key.split('|')[1];
+
                 List<SaleInvoiceItem> group = entry.value;
 
                 double groupQty = 0;
                 double groupAmount = 0;
+                double groupNetAmount = 0;
 
                 List<pw.TableRow> rows = [];
 
-                /// PUBLICATION HEADER
                 rows.add(
                   pw.TableRow(
-                    decoration: pw.BoxDecoration(color: PdfColors.grey100),
+                    decoration: pw.BoxDecoration(
+                      color: PdfColors.grey100,
+                    ),
                     children: [
                       cell(""),
-                      cell(""),
+                      cell("Series: $series", bold: true),
                       cell(""),
                       cell(""),
                       cell(""),
@@ -151,12 +157,15 @@ class SaleInvoicePdf {
                 for (var item in group) {
                   groupQty += item.qty;
                   groupAmount += item.amount;
+                  groupNetAmount += item.netAmount;
 
                   rows.add(
                     pw.TableRow(
                       children: [
                         cell("${index++}"),
-                        cell("${item.bookName} - ${item.subject} - ${item.classes}"),
+                        cell(
+                          "${item.bookName} - ${item.subject} - ${item.classes}",
+                        ),
                         cell(item.qty.toStringAsFixed(0)),
                         cell(item.rate.toStringAsFixed(2)),
                         cell(item.amount.toStringAsFixed(2)),
@@ -165,6 +174,49 @@ class SaleInvoicePdf {
                     ),
                   );
                 }
+
+                double groupDiscount =
+                    groupAmount - groupNetAmount;
+
+                double groupDiscountPercent =
+                groupAmount > 0
+                    ? (groupDiscount / groupAmount) * 100
+                    : 0;
+
+                rows.add(
+                  pw.TableRow(
+                    children: [
+                      cell(""),
+                      cell("Subtotal", bold: true),
+                      cell(groupQty.toStringAsFixed(0), bold: true),
+                      cell(""),
+                      cell(groupAmount.toStringAsFixed(2), bold: true),
+                      cell(""),
+                    ],
+                  ),
+                );
+
+                rows.add(
+                  pw.TableRow(
+                    decoration: pw.BoxDecoration(
+                      color: PdfColors.blue100,
+                    ),
+                    children: [
+                      cell(""),
+                      cell(
+                        "Disc (${groupDiscountPercent.toStringAsFixed(2)}%)",
+                        bold: true,
+                      ),
+                      cell(""),
+                      cell(""),
+                      cell(""),
+                      cell(
+                        groupNetAmount.toStringAsFixed(2),
+                        bold: true,
+                      ),
+                    ],
+                  ),
+                );
 
                 return rows;
               }),

@@ -49,7 +49,8 @@ class _ReceiveCollectionScreenState extends State<ReceiveCollectionScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Receive Collection"),
-        backgroundColor: Colors.deepOrange,
+        backgroundColor: Colors.deepPurple,
+        foregroundColor: Colors.white,
 
       ),
       body: FutureBuilder<ReceiveCollectionModel?>(
@@ -88,7 +89,7 @@ class _ReceiveCollectionScreenState extends State<ReceiveCollectionScreen> {
               // 🔥 Total Amount
               Container(
                 padding: const EdgeInsets.all(12),
-                color: Colors.orange.shade100,
+                color: Colors.purple.shade100,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -115,11 +116,13 @@ class _ReceiveCollectionScreenState extends State<ReceiveCollectionScreen> {
                         DataColumn(label: Text("Status")),
                         DataColumn(label: Text("Payment Date")),
                         DataColumn(label: Text("Receipt No")),
+                        DataColumn(label: Text("Remarks")),
                         DataColumn(label: Text("Mode")),
                         DataColumn(label: Text("View")),
                       ],
                       rows: List.generate(filteredList.length, (index) {
                         final item = filteredList[index];
+
 
                         return DataRow(cells: [
                           DataCell(Text("${index + 1}")),
@@ -128,9 +131,29 @@ class _ReceiveCollectionScreenState extends State<ReceiveCollectionScreen> {
                           DataCell(Text("₹ ${item.amount}")),
                           DataCell(Text(item.receivedBy)),
                           DataCell(Text(item.status)),
-                          DataCell(Text(formatDate(item.date))), // ✅ clean date
+
+                          // Payment Date
+                          DataCell(Text(formatDate(item.date))),
+
+                          // Receipt No
                           DataCell(Text(item.receiptNo)),
+
+                          // Remarks
+                          DataCell(
+                            SizedBox(
+                              width: 220,
+                              child: Text(
+                                item.remarks,
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 2,
+                              ),
+                            ),
+                          ),
+
+                          // Mode
                           DataCell(Text(item.paymentMode)),
+
+                          // View
                           DataCell(
                             IconButton(
                               icon: const Icon(Icons.visibility),
@@ -139,7 +162,15 @@ class _ReceiveCollectionScreenState extends State<ReceiveCollectionScreen> {
                                   context: context,
                                   builder: (_) => AlertDialog(
                                     title: Text(item.schoolName),
-                                    content: Text(item.remarks),
+                                    content: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text("Receipt No: ${item.receiptNo}"),
+                                        const SizedBox(height: 10),
+                                        Text("Remarks: ${item.remarks}"),
+                                      ],
+                                    ),
                                   ),
                                 );
                               },

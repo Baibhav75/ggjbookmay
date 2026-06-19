@@ -125,7 +125,7 @@ class _SaleMixReportScreenState extends State<SaleMixReportScreen> {
   Map<String, List<SaleMixItem>> groupData(List<SaleMixItem> list) {
     final map = <String, List<SaleMixItem>>{};
     for (var item in list) {
-      final key = "${item.series}|${item.publication}";
+      final key = "${item.seriesName}|${item.publication}";
       map.putIfAbsent(key, () => []).add(item);
     }
     return map;

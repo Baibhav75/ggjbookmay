@@ -113,7 +113,7 @@ class _SaleDetailsMrpScreenState extends State<SaleDetailsMrpScreen> {
         const Divider(color: Colors.black, thickness: 2),
         const SizedBox(height: 10),
         const Text(
-          "SAlE MRP INVOICE",
+          "SALE MRP INVOICE",
           style: TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: Color(0xFF2B4C7E)),
         ),
         const SizedBox(height: 15),
@@ -137,7 +137,7 @@ class _SaleDetailsMrpScreenState extends State<SaleDetailsMrpScreen> {
             ]),
             TableRow(children: [
                const SizedBox(),
-               infoCell("Remark: ", ""),
+               infoCell("Remark: ", data.remark), // Dynamically printing Remark here
                const SizedBox(),
             ]),
             TableRow(children: [
@@ -155,6 +155,17 @@ class _SaleDetailsMrpScreenState extends State<SaleDetailsMrpScreen> {
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double invoiceWidth = screenWidth > 800 ? screenWidth - 32 : 1000;
+
+    const Map<int, TableColumnWidth> colWidths = {
+      0: FixedColumnWidth(50),
+      1: FlexColumnWidth(4),
+      2: FixedColumnWidth(60),
+      3: FixedColumnWidth(80),
+      4: FixedColumnWidth(100),
+      5: FixedColumnWidth(120),
+    };
+
+    final BorderSide side = const BorderSide(color: Colors.black87, width: 1.0);
 
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
@@ -195,13 +206,11 @@ class _SaleDetailsMrpScreenState extends State<SaleDetailsMrpScreen> {
           }
 
           int index = 1;
-          double totalQty = 0;
-          double totalAmount = 0;
+          double overallTotalQty = 0;
+          double overallTotalAmount = 0;
 
-          for (var item in data.items) {
-            totalQty += item.qty;
-            totalAmount += item.totalAmount;
-          }
+          // Estimate placeholder global discount since not provided in this model
+          double globalDiscountPercent = 0.0;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -225,22 +234,16 @@ class _SaleDetailsMrpScreenState extends State<SaleDetailsMrpScreen> {
                     children: [
                       invoiceHeaderMRP(data),
                       const SizedBox(height: 15),
+                      
+                      // HEADER TABLE
                       Table(
                         border: TableBorder.all(color: Colors.black87),
-                        columnWidths: const {
-                          0: FixedColumnWidth(50),
-                          1: FlexColumnWidth(4),
-                          2: FixedColumnWidth(60),
-                          3: FixedColumnWidth(80),
-                          4: FixedColumnWidth(100),
-                          5: FixedColumnWidth(120),
-                        },
+                        columnWidths: colWidths,
                         children: [
                           TableRow(
                             decoration: BoxDecoration(color: Colors.grey.shade200),
                             children: [
                               tableHeader("S.N."),
-
                               tableHeader("Book Name (Title)"),
                               tableHeader("Qty"),
                               tableHeader("Rate"),
@@ -248,122 +251,137 @@ class _SaleDetailsMrpScreenState extends State<SaleDetailsMrpScreen> {
                               tableHeader("Amt With Disc."),
                             ],
                           ),
-                          ...groupedItems.entries.expand((entry) {
-                            String series = entry.key.split('|')[0];
-                            String publication = entry.key.split('|')[1];
-                            List<SaleDetailsMrpItem> group = entry.value;
+                        ],
+                      ),
+                      
+                      // GROUPS
+                      ...groupedItems.entries.map((entry) {
+                        String series = entry.key.split('|')[0];
+                        String publication = entry.key.split('|')[1];
+                        List<SaleDetailsMrpItem> group = entry.value;
 
-                            double groupQty = 0;
-                            double groupAmount = 0;
-                            double groupDiscAmount = 0;
+                        double groupQty = 0;
+                        double groupAmount = 0;
+                        double groupDiscAmount = 0;
 
-                            List<TableRow> rows = [
-                              TableRow(
-                                decoration: BoxDecoration(color: Colors.grey.shade50),
+                        for (var item in group) {
+                          double amtWithDisc = item.totalAmount; // Update if real disc calculation exists
+                          groupQty += item.qty;
+                          groupAmount += item.totalAmount;
+                          groupDiscAmount += amtWithDisc;
+                          overallTotalQty += item.qty;
+                          overallTotalAmount += item.totalAmount;
+                        }
+
+                        return Column(
+                          children: [
+                            // Series/Publication Row
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade50,
+                                border: Border(left: side, right: side, bottom: side),
+                              ),
+                              padding: const EdgeInsets.all(8),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  const SizedBox(),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8),
-                                    child: Text(
-                                      "Series: $series",
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 12,
-                                        color: Color(0xFF2B4C7E),
-                                      ),
-                                      textAlign: TextAlign.left,
+                                  Text(
+                                    "Series: $series",
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                      color: Color(0xFF2B4C7E),
                                     ),
                                   ),
-                                  const SizedBox(),
-                                  const SizedBox(),
-                                  const SizedBox(),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8),
-                                    child: Text(
-                                      "Publication: $publication",
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 12,
-                                        color: Color(0xFF2B4C7E),
-                                      ),
-                                      textAlign: TextAlign.right,
+                                  Text(
+                                    "Publication: $publication",
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                      color: Color(0xFF2B4C7E),
                                     ),
                                   ),
                                 ],
                               ),
-                            ];
-
-                            for (var item in group) {
-                              double amtWithDisc = item.totalAmount; // change if discount field exists
-
-                              groupQty += item.qty;
-                              groupAmount += item.totalAmount;
-                              groupDiscAmount += amtWithDisc;
-
-                              rows.add(
+                            ),
+                            // Item & Subtotal Table
+                            Table(
+                              border: TableBorder(
+                                left: side, right: side, bottom: side,
+                                verticalInside: side, horizontalInside: side,
+                              ),
+                              columnWidths: colWidths,
+                              children: [
+                                ...group.map((item) {
+                                  double amtWithDisc = item.totalAmount;
+                                  return TableRow(
+                                    children: [
+                                      tableCell("${index++}"),
+                                      tableCell(
+                                        "${item.bookName} - ${item.subject} - ${item.classes}",
+                                        align: TextAlign.left,
+                                      ),
+                                      tableCell(item.qty.toStringAsFixed(0)),
+                                      tableCell(item.rate.toStringAsFixed(2)),
+                                      tableCell(item.totalAmount.toStringAsFixed(2)),
+                                      tableCell(amtWithDisc.toStringAsFixed(2)),
+                                    ],
+                                  );
+                                }),
+                                // Subtotal Row
                                 TableRow(
                                   children: [
-                                    tableCell("${index++}"),
-                                    tableCell(
-                                      "${item.bookName} - ${item.subject} - ${item.classes}",
-                                      align: TextAlign.left,
-                                    ),
-                                    tableCell(item.qty.toStringAsFixed(0)),
-                                    tableCell(item.rate.toStringAsFixed(2)),
-                                    tableCell(item.totalAmount.toStringAsFixed(2)),
-                                    tableCell(amtWithDisc.toStringAsFixed(2)),
+                                    const SizedBox(),
+                                    tableCell("Subtotal:", align: TextAlign.right, weight: FontWeight.bold),
+                                    tableCell(groupQty.toStringAsFixed(0), weight: FontWeight.bold),
+                                    const SizedBox(),
+                                    tableCell("₹ ${groupAmount.toStringAsFixed(2)}", weight: FontWeight.bold),
+                                    const SizedBox(),
                                   ],
                                 ),
-                              );
-                            }
+                                // Disc Row
+                                TableRow(
+                                  decoration: BoxDecoration(color: Colors.blue.shade50),
+                                  children: [
+                                    const SizedBox(),
+                                    tableCell("Disc(%) :", align: TextAlign.right, weight: FontWeight.bold),
+                                    tableCell(globalDiscountPercent.toStringAsFixed(2), align: TextAlign.center, weight: FontWeight.bold),
+                                    const SizedBox(),
+                                    const SizedBox(),
+                                    tableCell("₹ ${groupDiscAmount.toStringAsFixed(4)}", weight: FontWeight.bold),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        );
+                      }).toList(),
 
-
-
-
-                            return rows;
-                          }),
-
-                          TableRow(
-                            children: [
-                              const SizedBox(),
-                              tableCell("Subtotal:", align: TextAlign.right, weight: FontWeight.bold),
-                              tableCell(totalQty.toStringAsFixed(0), weight: FontWeight.bold),
-                              const SizedBox(),
-                              tableCell("₹ ${totalAmount.toStringAsFixed(2)}", weight: FontWeight.bold),
-                              const SizedBox(),
-                            ],
-                          ),
-
-                          TableRow(
-                            decoration: BoxDecoration(color: Colors.blue.shade50),
-                            children: [
-                              const SizedBox(),
-                              tableCell("Disc(%) :", align: TextAlign.right, weight: FontWeight.bold),
-                              tableCell("0.00", weight: FontWeight.bold),
-                              const SizedBox(),
-                              const SizedBox(),
-                              tableCell("₹ ${totalAmount.toStringAsFixed(4)}", weight: FontWeight.bold),
-                            ],
-                          ),
-
+                      // GRAND TOTAL TABLE
+                      Table(
+                        border: TableBorder(
+                          left: side, right: side, bottom: side,
+                          verticalInside: side, horizontalInside: side,
+                        ),
+                        columnWidths: colWidths,
+                        children: [
                           TableRow(
                             decoration: BoxDecoration(color: Colors.green.shade100),
                             children: [
                               const SizedBox(),
                               tableCell("Grand Total:", align: TextAlign.right, weight: FontWeight.bold),
-                              tableCell(totalQty.toStringAsFixed(0), weight: FontWeight.bold),
+                              tableCell(overallTotalQty.toStringAsFixed(0), weight: FontWeight.bold),
                               const SizedBox(),
                               tableCell("₹ ${data.grandTotal.toStringAsFixed(2)}", weight: FontWeight.bold),
                               const SizedBox(),
                             ],
                           ),
-
                           TableRow(
                             decoration: BoxDecoration(color: Colors.cyan.shade50),
                             children: [
                               const SizedBox(),
                               tableCell("Total Discount:", align: TextAlign.right, weight: FontWeight.bold),
-                              tableCell("0.00%", weight: FontWeight.bold),
+                              tableCell("${globalDiscountPercent.toStringAsFixed(2)}%", align: TextAlign.center, weight: FontWeight.bold),
                               const SizedBox(),
                               const SizedBox(),
                               tableCell("₹ ${data.grandTotal.toStringAsFixed(4)}", weight: FontWeight.bold),

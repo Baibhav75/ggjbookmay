@@ -95,26 +95,22 @@ class _SaleInvoiceClubHistoryScreenState
     Map<String, SaleInvoiceHistoryItem> map = {};
 
     for (var item in list) {
-      if (map.containsKey(item.schoolId)) {
-        final existing = map[item.schoolId]!;
+      // If schoolId is empty, use billNo as a unique key so we don't merge different walk-in sales
+      final String key = (item.schoolId.isEmpty) ? "bill_${item.billNo}" : item.schoolId;
 
-        map[item.schoolId] = SaleInvoiceHistoryItem(
+      if (map.containsKey(key)) {
+        final existing = map[key]!;
+
+        map[key] = SaleInvoiceHistoryItem(
           sNo: existing.sNo,
-          billNo: existing.billNo,
+          billNo: existing.billNo, // Keep the latest bill no
           schoolName: existing.schoolName,
           schoolId: existing.schoolId,
           date: existing.date,
           totalAmount: existing.totalAmount + item.totalAmount,
         );
       } else {
-        map[item.schoolId] = SaleInvoiceHistoryItem(
-          sNo: item.sNo,
-          billNo: item.billNo,
-          schoolName: item.schoolName,
-          schoolId: item.schoolId,
-          date: item.date,
-          totalAmount: item.totalAmount,
-        );
+        map[key] = item; // Optimize: No need to recreate the object
       }
     }
 
@@ -387,52 +383,52 @@ class _SaleInvoiceClubHistoryScreenState
 
                                       const PopupMenuItem(
                                         value: "mrp",
-                                        child: Text("View MRP Details"),
+                                        child: Text("1. View MRP Details"),
                                       ),
 
                                       const PopupMenuItem(
                                         value: "discount",
-                                        child: Text("View Discount Details"),
+                                        child: Text("2. View Discount Details"),
                                       ),
 
                                       const PopupMenuItem(
                                         value: "agent_discount",
-                                        child: Text("View Agent Discount Details"),
+                                        child: Text("3. View Agent Discount Details"),
                                       ),
 
                                       const PopupMenuItem(
                                         value: "edit",
-                                        child: Text("Edit Invoice Sale"),
+                                        child: Text("4. Edit Invoice Sale"),
                                       ),
 
                                       const PopupMenuItem(
                                         value: "add_product",
-                                        child: Text("Add New Product"),
+                                        child: Text("5. Add New Product"),
                                       ),
 
                                       const PopupMenuItem(
                                         value: "MRP_ledger",
-                                        child: Text("View MRP Ledger"),
+                                        child: Text("6. View MRP Ledger"),
                                       ),
 
                                       const PopupMenuItem(
                                         value: "Discount",
-                                        child: Text("Sale Ledger Discount"),
+                                        child: Text("7. Sale Ledger Discount"),
                                       ),
 
                                       const PopupMenuItem(
                                         value: "mix",
-                                        child: Text("View Sale MixReport"),
+                                        child: Text("8. View Sale MixReport"),
                                       ),
 
                                       const PopupMenuItem(
                                         value: "pending_mix",
-                                        child: Text("View Sale Pending MixReport"),
+                                        child: Text("9. View Sale Pending MixReport"),
                                       ),
 
                                       const PopupMenuItem(
                                         value: "company_mix",
-                                        child: Text("View Sale MixReport Company"),
+                                        child: Text("10. View Sale MixReport Company"),
                                       ),
                                     ],
 

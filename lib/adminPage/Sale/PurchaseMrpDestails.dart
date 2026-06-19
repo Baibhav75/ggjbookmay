@@ -238,141 +238,167 @@ class _PurchaseInvoicePageState extends State<PurchaseInvoicePage> {
       groupedItems[item.series]!.add(item);
     }
 
-    List<TableRow> rows = [];
+    const Map<int, TableColumnWidth> colWidths = {
+      0: FixedColumnWidth(40),
+      1: FlexColumnWidth(4),
+      2: FixedColumnWidth(50),
+      3: FixedColumnWidth(70),
+      4: FixedColumnWidth(100),
+      5: FixedColumnWidth(100),
+    };
 
-    // Header Row
-    rows.add(
-      TableRow(
-        decoration: BoxDecoration(color: Colors.grey.shade100),
-        children: [
-          _headerCell("S.N.", isBold: true),
-          _headerCell("Book Name (Title)", isBold: true),
-          _headerCell("Qty", isBold: true),
-          _headerCell("Rate", isBold: true),
-          _headerCell("Amount", isBold: true),
-          _headerCell("Amt With\nDisc.", isBold: true),
-        ],
-      ),
-    );
+    final BorderSide side = BorderSide(color: Colors.grey.shade800, width: 1);
 
     int sn = 1;
-    double totalQty = 0;
-    double totalAmount = 0;
+    double overallTotalQty = 0;
+    double overallTotalAmount = 0;
 
-    groupedItems.forEach((series, items) {
-      // Series Header Row
-      rows.add(
-        TableRow(
-          decoration: BoxDecoration(color: Colors.grey.shade200),
+    return Column(
+      children: [
+        // Header Table
+        Table(
+          border: TableBorder.all(color: Colors.grey.shade800, width: 1),
+          columnWidths: colWidths,
           children: [
-            const SizedBox(),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
-              child: Text(
-                "Series: $series",
-                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87, fontSize: 13),
-              ),
+            TableRow(
+              decoration: BoxDecoration(color: Colors.grey.shade200),
+              children: [
+                _headerCell("S.N.", isBold: true),
+                _headerCell("Book Name (Title)", isBold: true),
+                _headerCell("Qty", isBold: true),
+                _headerCell("Rate", isBold: true),
+                _headerCell("Amount", isBold: true),
+                _headerCell("Amt With\nDisc.", isBold: true),
+              ],
             ),
-            const SizedBox(),
-            const SizedBox(),
-            const SizedBox(),
-            const SizedBox(),
           ],
         ),
-      );
 
-      // Books in Series
-      for (var item in items) {
-        double amount = item.qty * item.rate;
-        totalQty += item.qty;
-        totalAmount += amount;
+        // Groups
+        ...groupedItems.entries.map((entry) {
+          String series = entry.key;
+          String publication = invoice.publication; // Use invoice publication for group header
+          List<PurchaseItem> group = entry.value;
 
-        rows.add(
-          TableRow(
+          double groupQty = 0;
+          double groupAmount = 0;
+
+          for (var item in group) {
+            double amount = item.qty * item.rate;
+            groupQty += item.qty;
+            groupAmount += amount;
+            overallTotalQty += item.qty;
+            overallTotalAmount += amount;
+          }
+
+          // Placeholder discount since there's no discount in the model
+          double groupDiscountPercent = 0.0;
+          double groupAfterDisc = groupAmount;
+
+          return Column(
             children: [
-              _itemCell(sn.toString(), align: TextAlign.center),
-              _itemCell("${item.bookName} - ${item.subject} - Class ${item.classes}"),
-              _itemCell(item.qty.toString(), align: TextAlign.center),
-              _itemCell(item.rate.toStringAsFixed(2), align: TextAlign.right),
-              _itemCell(amount.toStringAsFixed(2), align: TextAlign.right),
-              _itemCell(""), // Amt With Disc placeholder
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  border: Border(left: side, right: side, bottom: side),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Series: $series",
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87, fontSize: 13),
+                    ),
+                    Text(
+                      "Publication: $publication",
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87, fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+              Table(
+                border: TableBorder(
+                  left: side, right: side, bottom: side,
+                  verticalInside: side, horizontalInside: side,
+                ),
+                columnWidths: colWidths,
+                children: [
+                  ...group.map((item) {
+                    double amount = item.qty * item.rate;
+                    return TableRow(
+                      children: [
+                        _itemCell("${sn++}", align: TextAlign.center),
+                        _itemCell("${item.bookName} - ${item.subject} - Class ${item.classes}"),
+                        _itemCell(item.qty.toString(), align: TextAlign.center),
+                        _itemCell(item.rate.toStringAsFixed(2), align: TextAlign.right),
+                        _itemCell(amount.toStringAsFixed(2), align: TextAlign.right),
+                        _itemCell(amount.toStringAsFixed(4), align: TextAlign.right), // Amt With Disc placeholder
+                      ],
+                    );
+                  }),
+                  // Subtotal Row
+                  TableRow(
+                    children: [
+                      const SizedBox(),
+                      _itemCell("Subtotal:", align: TextAlign.right, isBold: true),
+                      _itemCell(groupQty.toStringAsFixed(0), align: TextAlign.center, isBold: true),
+                      const SizedBox(),
+                      _itemCell("₹ ${groupAmount.toStringAsFixed(2)}", align: TextAlign.right, isBold: true),
+                      const SizedBox(),
+                    ],
+                  ),
+                  // Disc(%) Row
+                  TableRow(
+                    decoration: BoxDecoration(color: Colors.blue.shade50),
+                    children: [
+                      const SizedBox(),
+                      _itemCell("Disc (${groupDiscountPercent.toStringAsFixed(2)} %):", align: TextAlign.right, isBold: true),
+                      const SizedBox(),
+                      const SizedBox(),
+                      const SizedBox(),
+                      _itemCell("₹ ${groupAfterDisc.toStringAsFixed(4)}", align: TextAlign.right, isBold: true),
+                    ],
+                  ),
+                ],
+              ),
             ],
+          );
+        }),
+
+        // Grand Totals Table
+        Table(
+          border: TableBorder(
+            left: side, right: side, bottom: side,
+            verticalInside: side, horizontalInside: side,
           ),
-        );
-        sn++;
-      }
-    });
-
-    // Subtotal Row
-    rows.add(
-      TableRow(
-        children: [
-          const SizedBox(),
-          _itemCell("Subtotal:", align: TextAlign.right, isBold: true),
-          _itemCell(totalQty.toStringAsFixed(0), align: TextAlign.center, isBold: true),
-          const SizedBox(),
-          _itemCell("₹ ${totalAmount.toStringAsFixed(2)}", align: TextAlign.right, isBold: true),
-          const SizedBox(),
-        ],
-      ),
-    );
-
-    // Disc(%) Row
-    rows.add(
-      TableRow(
-        decoration: BoxDecoration(color: Colors.blue.shade50),
-        children: [
-          const SizedBox(),
-          _itemCell("Disc(%) :", align: TextAlign.right, isBold: true),
-          _itemCell("0", align: TextAlign.center, isBold: true), // Placeholder
-          const SizedBox(),
-          const SizedBox(),
-          _itemCell("₹ ${totalAmount.toStringAsFixed(2)}", align: TextAlign.right, isBold: true), // Placeholder
-        ],
-      ),
-    );
-
-    // Grand Total Row
-    rows.add(
-      TableRow(
-        decoration: BoxDecoration(color: Colors.green.shade100),
-        children: [
-          const SizedBox(),
-          _itemCell("Grand Total:", align: TextAlign.right, isBold: true),
-          _itemCell(totalQty.toStringAsFixed(0), align: TextAlign.center, isBold: true),
-          const SizedBox(),
-          _itemCell("₹ ${totalAmount.toStringAsFixed(2)}", align: TextAlign.center, isBold: true),
-          const SizedBox(),
-        ],
-      ),
-    );
-
-    // Total Discount Row
-    rows.add(
-      TableRow(
-        decoration: BoxDecoration(color: Colors.lightBlue.shade100),
-        children: [
-          const SizedBox(),
-          _itemCell("Total Discount:", align: TextAlign.right, isBold: true),
-          _itemCell("0%", align: TextAlign.center, isBold: true),
-          const SizedBox(),
-          const SizedBox(),
-          _itemCell("₹ ${totalAmount.toStringAsFixed(2)}", align: TextAlign.right, isBold: true),
-        ],
-      ),
-    );
-
-    return Table(
-      border: TableBorder.all(color: Colors.grey.shade800, width: 1),
-      columnWidths: const {
-        0: FixedColumnWidth(40),
-        1: FlexColumnWidth(4),
-        2: FixedColumnWidth(50),
-        3: FixedColumnWidth(70),
-        4: FixedColumnWidth(100),
-        5: FixedColumnWidth(100),
-      },
-      children: rows,
+          columnWidths: colWidths,
+          children: [
+            TableRow(
+              decoration: BoxDecoration(color: Colors.green.shade100),
+              children: [
+                const SizedBox(),
+                _itemCell("Grand Total:", align: TextAlign.right, isBold: true),
+                _itemCell(overallTotalQty.toStringAsFixed(0), align: TextAlign.center, isBold: true),
+                const SizedBox(),
+                _itemCell("₹ ${overallTotalAmount.toStringAsFixed(2)}", align: TextAlign.right, isBold: true),
+                const SizedBox(),
+              ],
+            ),
+            TableRow(
+              decoration: BoxDecoration(color: Colors.lightBlue.shade100),
+              children: [
+                const SizedBox(),
+                _itemCell("Total Discount (0.00 %):", align: TextAlign.right, isBold: true),
+                const SizedBox(),
+                const SizedBox(),
+                const SizedBox(),
+                _itemCell("₹ ${overallTotalAmount.toStringAsFixed(4)}", align: TextAlign.right, isBold: true),
+              ],
+            ),
+          ],
+        ),
+      ],
     );
   }
 

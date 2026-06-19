@@ -142,6 +142,10 @@ class SaleMrpInvoicePdf {
 
                 List<pw.TableRow> rows = [];
 
+                double groupQty = 0;
+                double groupAmount = 0;
+                double groupDiscountAmount = 0;
+
                 rows.add(
                   pw.TableRow(
                     decoration: pw.BoxDecoration(color: PdfColors.grey100),
@@ -159,7 +163,13 @@ class SaleMrpInvoicePdf {
                 for (var item in group) {
                   double discAmount =
                       item.totalAmount * discountPercent / 100;
-                  double finalAmount = item.totalAmount - discAmount;
+
+                  double finalAmount =
+                      item.totalAmount - discAmount;
+
+                  groupQty += item.qty;
+                  groupAmount += item.totalAmount;
+                  groupDiscountAmount += discAmount;
 
                   totalDiscount += discAmount;
 
@@ -167,7 +177,9 @@ class SaleMrpInvoicePdf {
                     pw.TableRow(
                       children: [
                         cell("${index++}"),
-                        cell("${item.bookName} - ${item.subject} - ${item.classes}"),
+                        cell(
+                          "${item.bookName} - ${item.subject} - ${item.classes}",
+                        ),
                         cell(item.qty.toStringAsFixed(0)),
                         cell(item.rate.toStringAsFixed(2)),
                         cell(item.totalAmount.toStringAsFixed(2)),
@@ -176,6 +188,68 @@ class SaleMrpInvoicePdf {
                     ),
                   );
                 }
+
+                /// GROUP SUBTOTAL
+                rows.add(
+                  pw.TableRow(
+                    children: [
+                      cell(""),
+                      cell("Subtotal", bold: true),
+                      cell(groupQty.toStringAsFixed(0), bold: true),
+                      cell(""),
+                      cell(groupAmount.toStringAsFixed(2), bold: true),
+                      cell(""),
+                    ],
+                  ),
+                );
+
+                /// GROUP DISCOUNT
+                rows.add(
+                  pw.TableRow(
+                    decoration: pw.BoxDecoration(
+                      color: PdfColors.yellow100,
+                    ),
+                    children: [
+                      cell(""),
+                      cell(
+                        "Disc (${discountPercent.toStringAsFixed(0)}%)",
+                        bold: true,
+                      ),
+                      cell(""),
+                      cell(""),
+                      cell(
+                        groupDiscountAmount.toStringAsFixed(2),
+                        bold: true,
+                      ),
+                      cell(
+                        (groupAmount - groupDiscountAmount)
+                            .toStringAsFixed(2),
+                        bold: true,
+                      ),
+                    ],
+                  ),
+                );
+
+                /// GROUP NET AMOUNT
+                rows.add(
+                  pw.TableRow(
+                    decoration: pw.BoxDecoration(
+                      color: PdfColors.green100,
+                    ),
+                    children: [
+                      cell(""),
+                      cell("Net Amount", bold: true),
+                      cell(""),
+                      cell(""),
+                      cell(""),
+                      cell(
+                        (groupAmount - groupDiscountAmount)
+                            .toStringAsFixed(2),
+                        bold: true,
+                      ),
+                    ],
+                  ),
+                );
 
                 return rows;
               }),
@@ -215,7 +289,7 @@ class SaleMrpInvoicePdf {
                   cell(totalQty.toStringAsFixed(0), bold: true),
                   cell(""),
                   cell(
-                    "Rs ${(totalAmount - totalDiscount).toStringAsFixed(2)}",
+                    (totalAmount - totalDiscount).toStringAsFixed(2),
                     bold: true,
                   ),
                   cell(""),

@@ -34,7 +34,7 @@ class SaleMixReportMrpModel {
 
 class SaleMixItem {
   final String publication;
-  final String series;
+  final String seriesName;
   final String bookName;
   final int saleQty;
   final int returnQty;
@@ -46,7 +46,7 @@ class SaleMixItem {
 
   SaleMixItem({
     required this.publication,
-    required this.series,
+    required this.seriesName,
     required this.bookName,
     required this.saleQty,
     required this.returnQty,
@@ -59,17 +59,16 @@ class SaleMixItem {
 
   factory SaleMixItem.fromJson(Map<String, dynamic> json) {
     return SaleMixItem(
-      publication: json['Publication'] ?? '',
-      series: json['Series'] ?? '',
-      bookName: json['BookName'] ?? '',
-      saleQty: int.tryParse(json['SaleQty'].toString()) ?? 0,
-      returnQty: int.tryParse(json['SaleReturnQty'].toString()) ?? 0,
-      netQty: int.tryParse(json['NetQty'].toString()) ?? 0,
-      rate: double.tryParse(json['Rate'].toString()) ?? 0.0,
-      amount: double.tryParse(json['Amount'].toString()) ?? 0.0,
-      discount: double.tryParse(json['DiscountPercent']?.toString() ?? '') ?? 
-                double.tryParse(json['Discount']?.toString() ?? '') ?? 0.0,
-      netAmount: double.tryParse(json['NetAmount'].toString()) ?? 0.0,
+      publication: json['Publication']?.toString() ?? '',
+      seriesName: json['SeriesName']?.toString() ?? '',
+      bookName: json['BookName']?.toString() ?? '',
+      saleQty: int.tryParse(json['SaleQty']?.toString() ?? '') ?? 0,
+      returnQty: int.tryParse(json['SaleReturnQty']?.toString() ?? '') ?? 0,
+      netQty: int.tryParse(json['NetQty']?.toString() ?? '') ?? 0,
+      rate: double.tryParse(json['Rate']?.toString() ?? '') ?? 0.0,
+      amount: double.tryParse(json['Amount']?.toString() ?? '') ?? 0.0,
+      discount: double.tryParse(json['DiscountPercent']?.toString() ?? '') ?? 0.0,
+      netAmount: double.tryParse(json['NetAmount']?.toString() ?? '') ?? 0.0,
     );
   }
 }

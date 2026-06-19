@@ -240,10 +240,10 @@ class _SampleSaleBillLedgerInvoiceState extends State<SampleSaleBillLedgerInvoic
                                   _tableRow(
                                     [
                                       _cell("Date", 15, center: true, isBold: true),
-                                      _cell("Vch No", 20, center: true, isBold: true),
-                                      _cell("Particulars", 40, center: true, isBold: true),
-                                      _cell("Debit", 12, center: true, isBold: true),
-                                      _cell("Credit", 13, center: true, isBold: true, rightBorder: false),
+                                      _cell("Particulars", 20, center: true, isBold: true),
+                                      _cell("Remark", 40, center: true, isBold: true),
+                                      _cell("Credit", 13, center: true, isBold: true),
+                                      _cell("Debit", 12, center: true, isBold: true, rightBorder: false),
                                     ],
                                     bgColor: Colors.grey.shade100,
                                   ),
@@ -253,9 +253,9 @@ class _SampleSaleBillLedgerInvoiceState extends State<SampleSaleBillLedgerInvoic
                                     return _tableRow([
                                       _cell(formatDate(e.date), 15, center: true),
                                       _cell(e.type, 20, center: true),
-                                      _cell(e.particulars, 40),
-                                      _cell(e.debit == 0 ? "" : "₹${e.debit.toStringAsFixed(2)}", 12, center: true),
-                                      _cell(e.credit == 0 ? "" : "₹${e.credit.toStringAsFixed(2)}", 13, center: true, rightBorder: false),
+                                      _cell(e.remark.isNotEmpty ? e.remark : e.particulars, 40),
+                                      _cell(e.credit == 0 ? "" : "₹${e.credit.toStringAsFixed(2)}", 13, center: true),
+                                      _cell(e.debit == 0 ? "" : "₹${e.debit.toStringAsFixed(2)}", 12, center: true, rightBorder: false),
                                     ]);
                                   }),
 
@@ -265,8 +265,8 @@ class _SampleSaleBillLedgerInvoiceState extends State<SampleSaleBillLedgerInvoic
                                       _cell("", 15),
                                       _cell("", 20),
                                       _cell("Total :", 40, right: true, isBold: true),
-                                      _cell("₹${ledger!.totalDebit.toStringAsFixed(2)}", 12, center: true, isBold: true),
-                                      _cell("₹${ledger!.totalCredit.toStringAsFixed(2)}", 13, center: true, isBold: true, rightBorder: false),
+                                      _cell("₹${ledger!.totalCredit.toStringAsFixed(2)}", 13, center: true, isBold: true),
+                                      _cell("₹${ledger!.totalDebit.toStringAsFixed(2)}", 12, center: true, isBold: true, rightBorder: false),
                                     ],
                                     bgColor: Colors.grey.shade200,
                                   ),
@@ -274,8 +274,8 @@ class _SampleSaleBillLedgerInvoiceState extends State<SampleSaleBillLedgerInvoic
                                   /// CLOSING BALANCE
                                   _tableRow(
                                     [
-                                      _cell("Closing Balance :", 87, right: true, isBold: true),
-                                      _cell("₹${ledger!.closingBalance.toStringAsFixed(2)}", 13, center: true, isBold: true, rightBorder: false),
+                                      _cell("Closing Balance :", 88, right: true, isBold: true),
+                                      _cell("₹${ledger!.closingBalance.toStringAsFixed(2)}", 12, center: true, isBold: true, rightBorder: false),
                                     ],
                                     bgColor: Colors.blue.shade50,
                                   ),

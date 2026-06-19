@@ -3,6 +3,7 @@ class SaleDetailsMrpResponse {
   final String schoolName;
   final String billDate;
   final double grandTotal;
+  final String remark;
   final List<SaleDetailsMrpItem> items;
 
   SaleDetailsMrpResponse({
@@ -10,6 +11,7 @@ class SaleDetailsMrpResponse {
     required this.schoolName,
     required this.billDate,
     required this.grandTotal,
+    required this.remark,
     required this.items,
   });
 
@@ -19,6 +21,7 @@ class SaleDetailsMrpResponse {
       schoolName: json['SchoolName']?.toString() ?? '',
       billDate: json['BillDate']?.toString() ?? '',
       grandTotal: double.tryParse(json['GrandTotal']?.toString() ?? '0') ?? 0.0,
+      remark: json['Remark']?.toString() ?? '',
       items: json['Items'] != null
           ? (json['Items'] as List).map((e) => SaleDetailsMrpItem.fromJson(e)).toList()
           : [],

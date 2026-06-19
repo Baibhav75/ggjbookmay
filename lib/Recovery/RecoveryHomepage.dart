@@ -4,6 +4,7 @@ import '../Model/receive_pending_amount_model.dart';
 import '../Service/assigned_school_service.dart';
 import '../Model/assigned_school_model.dart';
 import '../Service/receive_pending_amount_service.dart';
+import '../home_screen.dart';
 import 'AssignedSchoolScreen.dart';
 import 'CollectAmountPage.dart';
 import 'RecoveryPendingAmountScreen.dart';
@@ -432,13 +433,18 @@ class _RecoveryHomePageState extends State<RecoveryHomePage> {
             leading: const Icon(Icons.logout, color: Colors.red),
             title: const Text("Logout"),
             onTap: () async {
-              // Delete credentials from secure storage
               final secureStorage = SecureStorageService();
               await secureStorage.logout();
-              
+
               if (!context.mounted) return;
-              Navigator.pop(context); // close drawer
-              Navigator.pop(context); // back to login
+
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const HomeScreen(),
+                ),
+                    (route) => false,
+              );
             },
           ),
         ],

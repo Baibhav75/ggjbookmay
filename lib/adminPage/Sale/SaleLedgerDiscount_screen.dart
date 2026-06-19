@@ -128,7 +128,7 @@ class _SaleLedgerDiscountScreenState extends State<SaleLedgerDiscountScreen> {
         const Divider(color: Colors.black, thickness: 2),
         const SizedBox(height: 15),
         const Text(
-          "SALE LEDGER STATEMENT",
+          "SALE LEDGER Discount STATEMENT",
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF2B4C7E), decoration: TextDecoration.underline),
         ),
         const SizedBox(height: 20),

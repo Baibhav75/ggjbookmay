@@ -1,6 +1,7 @@
 import 'package:bookworld/adminPage/Sale/sale_details_mrp_screen.dart';
 import 'package:bookworld/adminPage/Sale/sale_invoice_details_screen.dart';
 import 'package:bookworld/adminPage/Sale/sale_view_mrp_ledger_screen.dart';
+import 'package:bookworld/adminPage/Sale/view_agent_discount_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../appDart/discrete_circular_loader.dart';
@@ -340,6 +341,17 @@ class _SaleInvoiceIndividuleScreenState
                                           );
                                           break;
 
+                                        case "agent_discount":
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => ViewAgentDiscountDetailsScreen(
+                                                billNo: item.billNo,
+                                              ),
+                                            ),
+                                          );
+                                          break;
+
                                         case "MRP_ledger":
                                           Navigator.push(
                                             context,
@@ -419,52 +431,52 @@ class _SaleInvoiceIndividuleScreenState
 
                                       const PopupMenuItem(
                                         value: "mrp",
-                                        child: Text("View MRP Details"),
+                                        child: Text("1. View MRP Details"),
                                       ),
 
                                       const PopupMenuItem(
                                         value: "discount",
-                                        child: Text("View Discount Details"),
+                                        child: Text("2. View Discount Details"),
                                       ),
 
                                       const PopupMenuItem(
                                         value: "agent_discount",
-                                        child: Text("View Agent Discount Details"),
+                                        child: Text("3. View Agent Discount Details"),
                                       ),
 
                                       const PopupMenuItem(
                                         value: "edit",
-                                        child: Text("Edit Invoice Sale"),
+                                        child: Text("4. Edit Invoice Sale"),
                                       ),
 
                                       const PopupMenuItem(
                                         value: "add_product",
-                                        child: Text("Add New Product"),
+                                        child: Text("5. Add New Product"),
                                       ),
 
                                       const PopupMenuItem(
                                         value: "MRP_ledger",
-                                        child: Text("View MRP Ledger"),
+                                        child: Text("6. View MRP Ledger"),
                                       ),
 
                                       const PopupMenuItem(
                                         value: "Discount",
-                                        child: Text("Sale Ledger Discount"),
+                                        child: Text("7. Sale Ledger Discount"),
                                       ),
 
                                       const PopupMenuItem(
                                         value: "mix",
-                                        child: Text("View Sale MixReport"),
+                                        child: Text("8. View Sale MixReport"),
                                       ),
 
                                       const PopupMenuItem(
                                         value: "pending_mix",
-                                        child: Text("View Sale Pending MixReport"),
+                                        child: Text("9. View Sale Pending MixReport"),
                                       ),
 
                                       const PopupMenuItem(
                                         value: "company_mix",
-                                        child: Text("View Sale MixReport Company P"),
+                                        child: Text("10. View Sale MixReport Company P"),
                                       ),
                                     ],
 

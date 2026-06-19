@@ -18,7 +18,7 @@ class SaleMixReportPdf {
     /// 🔹 GROUPING SAME AS UI
     Map<String, List<SaleMixItem>> grouped = {};
     for (var item in data.data) {
-      String key = "${item.series}|${item.publication}";
+      String key = "${item.seriesName}|${item.publication}";
       grouped.putIfAbsent(key, () => []).add(item);
     }
 
