@@ -173,7 +173,7 @@ class PendingRecoveryCollectSection {
                             );
                           }
 
-                          final hasSelected = list.any((c) => c.employeeId == selectedCashier);
+                          final hasSelected = list.any((c) => c.employeeName == selectedCashier);
                           final currentValue = hasSelected ? selectedCashier : null;
 
                           return DropdownButtonFormField<String>(
@@ -194,7 +194,7 @@ class PendingRecoveryCollectSection {
                             ),
                             items: list.map((c) {
                               return DropdownMenuItem<String>(
-                                value: c.employeeId,
+                                value: c.employeeName,
                                 child: Text("${c.employeeName} (${c.employeeId})",
                                     style: GoogleFonts.poppins()),
                               );
@@ -335,7 +335,7 @@ class PendingRecoveryCollectSection {
                                 schoolId: schoolId,
                                 otp: otpText,
                                 mobile: mobileController.text.trim(),
-                                staffId: selectedCashier ?? "",
+                                cashierName: selectedCashier ?? "",
                                 remarks: remarksController.text.trim(),
                               );
 

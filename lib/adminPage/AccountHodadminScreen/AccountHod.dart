@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../HomePagelist/addDayBook.dart';
 import '../../HomePagelist/dayBookHistory.dart';
-import '../Sale/SaleScreen.dart';
+import '../Sale/SaleManagementScreen.dart';
 import 'AccountHodAddCashier.dart';
 import 'PURCHASE.dart';
 

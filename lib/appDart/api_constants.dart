@@ -60,6 +60,10 @@ static String saleReturnSample(String billNo) =>
   static String saleInvoice(String billNo) {
     return "$baseUrl/GetSaleInvoiceByAgentComission/GetSaleInvoiceByAgentComission?billNo=$billNo";
   }
+
+  static String saleReturnDetail(String billNo) =>
+      "$baseUrl/SaleReturn/ViewSaleReturnDetail?billNo=$billNo";
+
 }
 
 

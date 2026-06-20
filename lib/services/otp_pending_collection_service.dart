@@ -41,7 +41,7 @@ class OtpPendingCollectionService {
     required String schoolId,
     required String otp,
     required String mobile,
-    required String staffId,
+    required String cashierName,
     required String remarks,
   }) async {
     try {
@@ -55,7 +55,7 @@ class OtpPendingCollectionService {
           'SchoolId': schoolId,
           'OTP': otp,
           'Mobile': mobile,
-          'StaffId': staffId,
+          'CashierName': cashierName,
           'Remarks': remarks,
         }),
       );

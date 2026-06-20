@@ -6,6 +6,7 @@ import '/Model/sale_view_mrp_ledger_model.dart';
 import '/Service/sale_view_mrp_ledger_service.dart';
 import 'package:share_plus/share_plus.dart';
 import '/pdf/salePdf/sale_ledger_pdf.dart';
+import 'package:intl/intl.dart';
 
 class SaleViewMRPLedgerScreen extends StatefulWidget {
   final String schoolId;
@@ -18,7 +19,6 @@ class SaleViewMRPLedgerScreen extends StatefulWidget {
 }
 Future<void> shareLedger(SaleViewMRPLedgerResponse data) async {
   final file = await SaleLedgerPdf.generate(data);
-
 
   await Share.shareXFiles(
     [XFile(file.path)],
@@ -51,8 +51,17 @@ class _SaleViewMRPLedgerScreenState
   }
 
   String formatDate(String raw) {
-    final dt = DateTime.parse(raw);
-    return "${dt.day}/${dt.month}/${dt.year}";
+    if (raw.isEmpty) return "";
+
+    try {
+      final dt =
+      DateFormat("dd/MM/yyyy").parse(raw);
+
+      return DateFormat("dd/MM/yyyy")
+          .format(dt);
+    } catch (e) {
+      return raw;
+    }
   }
   String date = ""; // example
 

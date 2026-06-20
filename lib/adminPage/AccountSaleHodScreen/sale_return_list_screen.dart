@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../SellReturn/SaleReturnMRPDescountInvoice.dart';
+import '../SellReturn/sale_return_discount_ledger_screen.dart';
 import '../SellReturn/sale_return_mrp_invoice_screenInvoice.dart';
 import '/Model/sale_return_list_model.dart';
 import '/Service/sale_return_list_service.dart';
@@ -218,35 +220,94 @@ class _SaleReturnListScreenState extends State<SaleReturnListScreen> {
 
                                 /// ACTION
                                 SizedBox(
-                                  width: 100,
+                                  width: 120,
                                   child: PopupMenuButton<String>(
                                     onSelected: (value) {
-                                      if (value == "details") {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => SaleReturnMrpInvoiceScreen(
-                                              billNo: item.billNo,
+                                      switch (value) {
+
+                                        case "details":
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => SaleReturnMrpInvoiceScreen(
+                                                billNo: item.billNo,
+                                              ),
                                             ),
-                                          ),
-                                        );
-                                      } else if (value == "ledger") {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text("Ledger for ${item.billNo}")),
-                                        );
+                                          );
+                                          break;
+
+                                        case "ledger":
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => ViewSaleReturnDetailScreen(
+                                                billNo: item.billNo,
+                                              ),
+                                            ),
+                                          );
+                                          break;
+
+                                        case "Discount Ledger":
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => SaleReturnDiscountLedgerScreen(
+                                                schoolId: item.schoolId,
+                                              ),
+                                            ),
+                                          );
+                                          break;
                                       }
                                     },
-                                    itemBuilder: (context) => [
-                                      const PopupMenuItem(
+
+                                    itemBuilder: (context) => const [
+
+                                      PopupMenuItem(
                                         value: "details",
-                                        child: Text("MRP Details"),
+                                        child: Text("1. MRP Invoice"),
                                       ),
-                                      const PopupMenuItem(
+
+                                      PopupMenuItem(
                                         value: "ledger",
-                                        child: Text("MRP Ledger"),
+                                        child: Text("2. Discount Invoice"),
                                       ),
+                                      PopupMenuItem(
+                                        value: "Discount Ledger",
+                                        child: Text("3. Discount Ledger"),
+                                      ),
+
                                     ],
-                                    child: const Icon(Icons.visibility, color: Colors.blue),
+
+                                    /// View Button UI
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.blue,
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: const Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.visibility,
+                                            color: Colors.white,
+                                            size: 16,
+                                          ),
+                                          SizedBox(width: 5),
+                                          Text(
+                                            "View",
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ],

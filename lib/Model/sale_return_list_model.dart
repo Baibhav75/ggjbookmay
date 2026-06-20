@@ -23,12 +23,14 @@ class SaleReturnListResponse {
 class SaleReturnItem {
   final String billNo;
   final String schoolName;
+  final String schoolId;
   final String date;
   final double amount;
 
   SaleReturnItem({
     required this.billNo,
     required this.schoolName,
+    required this.schoolId,
     required this.date,
     required this.amount,
   });
@@ -37,6 +39,7 @@ class SaleReturnItem {
     return SaleReturnItem(
       billNo: json['BillNo'].toString(),
       schoolName: json['SchoolName'] ?? '',
+      schoolId: json['SchoolId'] ?? '',
       date: json['Dates'] ?? '',
       amount: (json['Amount'] ?? 0).toDouble(),
     );

@@ -1,30 +1,31 @@
 import 'package:flutter/material.dart';
-import '/model/sale_return_mrp_invoice_model.dart';
-import '/service/sale_return_mrp_invoice_service.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:cross_file/cross_file.dart';
-import '/pdf/sale_return_mrp_invoice_pdf.dart';
+import '';
+import '../../Model/view_sale_return_detail_model.dart';
+import '../../Service/view_sale_return_detail_service.dart';
+class ViewSaleReturnDetailScreen extends StatefulWidget {
 
-class SaleReturnMrpInvoiceScreen extends StatefulWidget {
+
   final String billNo;
-  final String? date;
 
-
-  const SaleReturnMrpInvoiceScreen({super.key, required this.billNo, this.date });
+  const ViewSaleReturnDetailScreen({
+    super.key,
+    required this.billNo,
+  });
 
   @override
-  State<SaleReturnMrpInvoiceScreen> createState() =>
-      _SaleReturnMrpInvoiceScreenState();
+  State<ViewSaleReturnDetailScreen> createState() =>
+      _ViewSaleReturnDetailScreenState();
 }
 
-class _SaleReturnMrpInvoiceScreenState
-    extends State<SaleReturnMrpInvoiceScreen> {
-  late Future<SaleReturnMrpInvoiceModel> future;
+class _ViewSaleReturnDetailScreenState
+    extends State<ViewSaleReturnDetailScreen> {
+
+  late Future<ViewSaleReturnDetailResponse?> future;
 
   @override
   void initState() {
     super.initState();
-    future = SaleReturnMrpInvoiceService.fetchInvoice(widget.billNo);
+    future = ViewSaleReturnDetailService.fetchDetail(widget.billNo);
   }
 
   Widget cell(
@@ -73,48 +74,22 @@ class _SaleReturnMrpInvoiceScreenState
     7: FixedColumnWidth(100),
   };
 
-  String formatDate(String date) {
-    try {
-      if (date.contains("T")) {
-        final d = DateTime.parse(date);
-        return "${d.day.toString().padLeft(2, '0')}-${d.month.toString().padLeft(2, '0')}-${d.year}";
-      }
-      final d = DateTime.parse(date);
-      return "${d.day.toString().padLeft(2, '0')}-${d.month.toString().padLeft(2, '0')}-${d.year}";
-    } catch (_) {
-      return date;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text("MRP Return Invoice ${widget.billNo}"),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.picture_as_pdf),
-            onPressed: () async {
-              try {
-                final data = await future;
-                final file = await SaleReturnMrpInvoicePdf.generate(data);
-                await Share.shareXFiles(
-                  [XFile(file.path)],
-                  text: "Sale Return Invoice ${data.master.billNo}",
-                );
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Error: $e")),
-                );
-              }
-            },
+        title: const Text(
+          "Sale Return Invoice",
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
           ),
-        ],
+        ),
       ),
-      body: FutureBuilder<SaleReturnMrpInvoiceModel>(
+      body: FutureBuilder<ViewSaleReturnDetailResponse?>(
         future: future,
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
@@ -122,19 +97,7 @@ class _SaleReturnMrpInvoiceScreenState
           }
 
           final data = snapshot.data!;
-          String formattedDate = formatDate(data.master.date);
-
-          // Prepare groups and totals
-          Map<String, List<SaleReturnItem>> grouped = {};
-          for (var item in data.items) {
-            grouped.putIfAbsent(item.series, () => []).add(item);
-          }
-
           int srNo = 1;
-          double grandTotalQty = 0;
-          double grandTotalAmount = 0;
-          double grandTotalDiscAmount = 0;
-          double grandTotalAmtWithDisc = 0;
 
           return SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -173,7 +136,7 @@ class _SaleReturnMrpInvoiceScreenState
                             ],
                           ),
                         ),
-                        const SizedBox(width: 120),
+                        const SizedBox(width: 120), // To balance the left logo
                       ],
                     ),
 
@@ -183,9 +146,9 @@ class _SaleReturnMrpInvoiceScreenState
 
                     const Center(
                       child: Text(
-                        "MRP RETURN INVOICE",
+                        "SALE RETURN DISCOUNT INVOICE",
                         style: TextStyle(
-                          color: Color(0xFFF93248),
+                          color: Color(0xFFF93248), // Match the bright red from the image
                           fontWeight: FontWeight.bold,
                           fontSize: 22,
                         ),
@@ -205,16 +168,16 @@ class _SaleReturnMrpInvoiceScreenState
                       children: [
                         TableRow(
                           children: [
-                            _infoCell("Invoice No: ", data.master.billNo, align: TextAlign.center),
-                            _infoCell("Party Name: ", data.master.schoolName, valueBold: true, align: TextAlign.center),
-                            _infoCell("Bill Date: ", formattedDate, align: TextAlign.center),
+                            _infoCell("Invoice No: ", data.invoice.billNo, align: TextAlign.center),
+                            _infoCell("Party Name: ", data.invoice.partyName, valueBold: true, align: TextAlign.center),
+                            _infoCell("Bill Date: ", data.invoice.billDate, align: TextAlign.center),
                           ],
                         ),
                         TableRow(
                           children: [
-                            _infoCell("Transport: ", data.master.transport, align: TextAlign.center),
-                            _infoCell("Address: ", data.master.address, align: TextAlign.center),
-                            _infoCell("Rec. Date: ", formattedDate, align: TextAlign.center),
+                            _infoCell("Transport: ", data.invoice.transport, align: TextAlign.center),
+                            _infoCell("Address: ", data.invoice.address, align: TextAlign.center),
+                            _infoCell("Rec. Date: ", data.invoice.recDate, align: TextAlign.center),
                           ],
                         ),
                       ],
@@ -243,28 +206,7 @@ class _SaleReturnMrpInvoiceScreenState
                     ),
 
                     /// SERIES LOOP
-                    ...grouped.entries.map((entry) {
-                      String series = entry.key;
-                      List<SaleReturnItem> list = entry.value;
-
-                      double subtotalQty = 0;
-                      double subtotalAmount = 0;
-                      double subtotalDiscAmount = 0;
-                      double subtotalAmountWithDisc = 0;
-
-                      for (var item in list) {
-                        subtotalQty += item.qty;
-                        subtotalAmount += item.totalAmount;
-                        double itemDiscAmount = (item.totalAmount * item.discount) / 100;
-                        subtotalDiscAmount += itemDiscAmount;
-                        subtotalAmountWithDisc += (item.totalAmount - itemDiscAmount);
-                      }
-
-                      grandTotalQty += subtotalQty;
-                      grandTotalAmount += subtotalAmount;
-                      grandTotalDiscAmount += subtotalDiscAmount;
-                      grandTotalAmtWithDisc += subtotalAmountWithDisc;
-
+                    ...data.seriesGroups.map((group) {
                       return Column(
                         children: [
                           Container(
@@ -280,10 +222,13 @@ class _SaleReturnMrpInvoiceScreenState
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  "Series: $series",
+                                  "Series: ${group.series}",
                                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.black54),
                                 ),
-                                const SizedBox(),
+                                Text(
+                                  "Publication: ${group.publication}",
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.black54),
+                                ),
                               ],
                             ),
                           ),
@@ -297,20 +242,17 @@ class _SaleReturnMrpInvoiceScreenState
                             ),
                             columnWidths: _tableWidths,
                             children: [
-                              ...list.map((item) {
-                                double itemDiscAmount = (item.totalAmount * item.discount) / 100;
-                                double itemAmountWithDisc = item.totalAmount - itemDiscAmount;
-
+                              ...group.items.map((item) {
                                 return TableRow(
                                   children: [
                                     cell("${srNo++}"),
-                                    cell("${item.bookName} - ${item.subject} - ${item.classes}", align: TextAlign.left),
-                                    cell("${item.qty.toInt()}"),
+                                    cell(item.bookName, align: TextAlign.left),
+                                    cell("${item.qty}"),
                                     cell(item.rate.toStringAsFixed(2)),
-                                    cell("₹ ${item.totalAmount.toStringAsFixed(2)}"),
+                                    cell("₹ ${item.amount.toStringAsFixed(2)}"),
                                     cell("${item.discount.toStringAsFixed(2)}\n%"),
-                                    cell("₹\n${itemDiscAmount.toStringAsFixed(4)}"),
-                                    cell("₹ ${itemAmountWithDisc.toStringAsFixed(4)}"),
+                                    cell("₹\n${item.discountAmt.toStringAsFixed(4)}"),
+                                    cell("₹ ${item.netAmount.toStringAsFixed(4)}"),
                                   ],
                                 );
                               }),
@@ -319,19 +261,19 @@ class _SaleReturnMrpInvoiceScreenState
                                 children: [
                                   cell(""),
                                   cell("Subtotal:", align: TextAlign.right, bold: true),
-                                  cell("${subtotalQty.toInt()}", bold: true),
+                                  cell("${group.seriesQty}", bold: true),
                                   cell(""),
-                                  cell("₹\n${subtotalAmount.toStringAsFixed(2)}", bold: true),
+                                  cell("₹\n${group.seriesTotal.toStringAsFixed(2)}", bold: true),
                                   cell(""),
-                                  cell("₹\n${subtotalDiscAmount.toStringAsFixed(4)}", bold: true),
-                                  cell("₹\n${subtotalAmountWithDisc.toStringAsFixed(4)}", bold: true),
+                                  cell("₹\n${group.seriesDiscountAmount.toStringAsFixed(4)}", bold: true),
+                                  cell("₹\n${group.seriesNetAmount.toStringAsFixed(4)}", bold: true),
                                 ],
                               ),
                             ],
                           ),
                         ],
                       );
-                    }).toList(),
+                    }),
 
                     /// GRAND TOTAL
                     Table(
@@ -346,17 +288,17 @@ class _SaleReturnMrpInvoiceScreenState
                       children: [
                         TableRow(
                           decoration: const BoxDecoration(
-                            color: Color(0xFFCCFFCC), // Light green background
+                            color: Color(0xFFCCFFCC), // Light green background from the image
                           ),
                           children: [
                             cell(""),
                             cell("Grand Total:", align: TextAlign.right, bold: true),
-                            cell("${grandTotalQty.toInt()}", bold: true),
+                            cell("${data.grandTotalQty}", bold: true),
                             cell(""),
-                            cell("₹ ${grandTotalAmount.toStringAsFixed(2)}", bold: true),
+                            cell("₹ ${data.grandTotal.toStringAsFixed(2)}", bold: true),
                             cell(""),
-                            cell("₹ ${grandTotalDiscAmount.toStringAsFixed(2)}", bold: true),
-                            cell("₹ ${grandTotalAmtWithDisc.toStringAsFixed(2)}", bold: true),
+                            cell("₹ ${data.totalDiscountAmount.toStringAsFixed(2)}", bold: true),
+                            cell("₹ ${data.finalAmount.toStringAsFixed(2)}", bold: true),
                           ],
                         ),
                       ],
