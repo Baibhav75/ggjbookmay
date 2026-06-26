@@ -6,6 +6,7 @@ import '../../HomePagelist/addDayBook.dart';
 import '../../HomePagelist/dayBookHistory.dart';
 import '../Sale/SaleManagementScreen.dart';
 import 'AccountHodAddCashier.dart';
+import 'BankBook/AccountBankBook.dart';
 import 'PURCHASE.dart';
 
 class AccountHodScreen extends StatelessWidget {
@@ -28,16 +29,7 @@ class AccountHodScreen extends StatelessWidget {
       "icon": Icons.account_balance_wallet,
       "color": Colors.blue,
     },
-    {
-      "title": "ADD DAY\nBOOK",
-      "icon": Icons.add_business,
-      "color": Colors.deepPurple,
-    },
-    {
-      "title": "EXPENSE",
-      "icon": Icons.money_off,
-      "color": Colors.red,
-    },
+
     {
       "title": "REVENUE",
       "icon": Icons.trending_up,
@@ -47,6 +39,12 @@ class AccountHodScreen extends StatelessWidget {
       "title": "ADD CASHIER",
       "icon": Icons.money,
       "color": Colors.green,
+    },
+
+    {
+      "title": "Bank Book",
+      "icon": Icons.comment_bank,
+      "color": Colors.deepPurpleAccent,
     },
   ];
 
@@ -194,14 +192,6 @@ class AccountHodScreen extends StatelessWidget {
         );
         break;
 
-      case "ADD DAY\nBOOK":
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => AddDayBook(),
-          ),
-        );
-        break;
 
       case "ADD CASHIER":
         Navigator.push(
@@ -211,56 +201,18 @@ class AccountHodScreen extends StatelessWidget {
           ),
         );
         break;
+
+      case "Bank Book":
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => AccountBankBook (),
+          ),
+        );
+        break;
     }
   }
 }
 
   /// CARD WIDGET
-  Widget _optionCard(
-      BuildContext context, {
-        required String title,
-        required IconData icon,
-        required Color color,
-        required VoidCallback onTap,
-      }) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.all(10.w),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(14.r),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
 
-            Container(
-              padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.25),
-                borderRadius: BorderRadius.circular(10.r),
-              ),
-              child: Icon(
-                icon,
-                size: 24.sp,
-                color: color,
-              ),
-            ),
-
-            SizedBox(height: 6.h),
-
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              style: GoogleFonts.poppins(
-                fontSize: 11.sp,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }

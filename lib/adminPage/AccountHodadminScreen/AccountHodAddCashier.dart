@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import '/Model/add_day_book_form_data_model.dart';
 import '/Model/get_form_date_cashier_sub_category_model.dart';
 import '/Service/add_day_book_form_data_service.dart';
@@ -7,9 +8,13 @@ import '/Service/get_form_date_cashier_sub_category_service.dart';
 import '/Model/CategoryAccountGroupType.dart';
 import '/Service/CategoryAccountGroupTypeService.dart';
 import '/appDart/auth_servcie.dart';
-import '/Model/add_ladger_khata_response_model.dart';
 import '/Service/add_ladger_khata_service.dart';
+import '/Model/get_cashier_child_select_model.dart';
+import '/Model/get_cashier_child_select_vendor_model.dart';
+import '/Service/get_cashier_child_select_service.dart';
 
+import '/Model/get_particular_suggestions_model.dart';
+import '/Service/get_particular_suggestions_service.dart';
 
 class CashierScreen extends StatefulWidget {
   const CashierScreen({super.key});
@@ -23,8 +28,14 @@ class _CashierScreenState extends State<CashierScreen> {
       AddDayBookFormDataService();
   final GetFormDateCashierSubCategoryService _subCategoryService =
       GetFormDateCashierSubCategoryService();
-  final CategoryMasterService _categoryMasterService =
-      CategoryMasterService();
+  final CategoryMasterService _categoryMasterService = CategoryMasterService();
+
+  final GetCashierChildSelectService _publicationService =
+      GetCashierChildSelectService();
+
+  final GetParticularSuggestionsService _suggestionService =
+      GetParticularSuggestionsService();
+
   final AuthService _authService = AuthService();
   final AddLadgerKhataService _addLadgerKhataService = AddLadgerKhataService();
 
@@ -37,8 +48,10 @@ class _CashierScreenState extends State<CashierScreen> {
   // ADD LEDGER KHATA Controllers
   final TextEditingController companyPartyController = TextEditingController();
   final TextEditingController mobileController = TextEditingController();
-  final TextEditingController expenseVoucherController = TextEditingController();
-  final TextEditingController receiptVoucherController = TextEditingController();
+  final TextEditingController expenseVoucherController =
+      TextEditingController();
+  final TextEditingController receiptVoucherController =
+      TextEditingController();
 
   // Expenses Controllers
   final TextEditingController partyNameController = TextEditingController();
@@ -65,15 +78,32 @@ class _CashierScreenState extends State<CashierScreen> {
   String? selectedCashier;
   String? selectedAgent;
 
+  // Employee Block States
+  String? selectedEmployee;
+
+  String? selectedPublication;
+  String? selectedVendor;
+
   bool _isLoading = true;
   bool _isSaving = false;
   bool _isSubCategoryLoading = false;
+  bool _isPublicationLoading = false;
+  bool _isVendorLoading = false;
   String? _errorMessage;
   AddDayBookFormDataModel? _formData;
   CategoryMasterModel? _categoryMasterModel;
   List<String> _typeList = [];
+
+  List<String> _partySuggestions = [];
+  bool _isSearchingParty = false;
+
   List<GetFormDateCashierSubCategoryItem> _subCategories =
       <GetFormDateCashierSubCategoryItem>[];
+  List<GetCashierChildSelectItem> _publications = <GetCashierChildSelectItem>[];
+  List<GetCashierChildSelectVendorItem> _vendors =
+      <GetCashierChildSelectVendorItem>[];
+  File? selectedFile;
+  String? selectedFileName;
 
   @override
   void initState() {
@@ -107,7 +137,8 @@ class _CashierScreenState extends State<CashierScreen> {
 
     try {
       final formData = await _formDataService.fetchFormData();
-      final categoryMasterData = await _categoryMasterService.getCategoryMasterList();
+      final categoryMasterData = await _categoryMasterService
+          .getCategoryMasterList();
 
       if (!mounted) return;
 
@@ -128,8 +159,55 @@ class _CashierScreenState extends State<CashierScreen> {
     }
   }
 
+  Future<void> _searchParty(String value) async {
+    if (value.trim().length < 2) {
+      setState(() {
+        _partySuggestions = [];
+      });
+      return;
+    }
+
+    setState(() {
+      _isSearchingParty = true;
+    });
+
+    try {
+      final response = await _suggestionService.getSuggestions(value);
+
+      if (!mounted) return;
+
+      setState(() {
+        _partySuggestions = response.data;
+        _isSearchingParty = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+
+      setState(() {
+        _partySuggestions = [];
+        _isSearchingParty = false;
+      });
+    }
+  }
+
+  Future<void> _pickFile() async {
+    final result = await FilePicker.platform.pickFiles(
+      allowMultiple: false,
+      type: FileType.any,
+    );
+
+    if (result != null) {
+      setState(() {
+        selectedFile = File(result.files.single.path!);
+        selectedFileName = result.files.single.name;
+      });
+    }
+  }
+
   void _updateTypeList(String? selectedGroupName) {
-    if (selectedGroupName == null || _formData == null || _categoryMasterModel == null) {
+    if (selectedGroupName == null ||
+        _formData == null ||
+        _categoryMasterModel == null) {
       _typeList = [];
       typeDropdown = null;
       return;
@@ -157,23 +235,33 @@ class _CashierScreenState extends State<CashierScreen> {
   }
 
   List<String> get accountGroupsList {
-    return _formData?.accountGroups.map((item) => item.name).toList() ?? <String>[];
+    return _formData?.accountGroups.map((item) => item.name).toList() ??
+        <String>[];
   }
 
   List<String> get accountantList {
-    return _formData?.accountants.map((item) => item.name).toList() ?? <String>[];
+    return _formData?.accountants.map((item) => item.name).toList() ??
+        <String>[];
   }
 
   List<String> get customerList {
-    return _formData?.customerList.map((item) => item.name).toList() ?? <String>[];
+    return _formData?.customerList.map((item) => item.name).toList() ??
+        <String>[];
   }
 
   List<String> get cashierList {
-    return _formData?.accountants.map((item) => item.name).toList() ?? <String>[];
+    return _formData?.accountants.map((item) => item.name).toList() ??
+        <String>[];
   }
 
   List<String> get agentList {
-    return _formData?.allEmployees.map((item) => item.name).toList() ?? <String>[];
+    return _formData?.allEmployees.map((item) => item.name).toList() ??
+        <String>[];
+  }
+
+  List<String> get employeeList {
+    return _formData?.allEmployees.map((item) => item.name).toList() ??
+        <String>[];
   }
 
   List<String> get expenseCategoryList {
@@ -188,6 +276,60 @@ class _CashierScreenState extends State<CashierScreen> {
 
   List<String> get subCategoryList {
     return _subCategories.map((item) => item.subCategoryName).toList();
+  }
+
+  List<String> get publicationList {
+    return _publications.map((item) => item.name).toList();
+  }
+
+  Future<void> _loadPublications() async {
+    if (!mounted) return;
+    setState(() {
+      _isPublicationLoading = true;
+      _publications = <GetCashierChildSelectItem>[];
+      selectedPublication = null;
+    });
+    try {
+      final result = await _publicationService.fetchPublications();
+      if (!mounted) return;
+      setState(() {
+        _publications = result.data;
+        _isPublicationLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _publications = <GetCashierChildSelectItem>[];
+        _isPublicationLoading = false;
+      });
+    }
+  }
+
+  List<String> get vendorList {
+    return _vendors.map((item) => item.name).toList();
+  }
+
+  Future<void> _loadVendors() async {
+    if (!mounted) return;
+    setState(() {
+      _isVendorLoading = true;
+      _vendors = <GetCashierChildSelectVendorItem>[];
+      selectedVendor = null;
+    });
+    try {
+      final result = await _publicationService.fetchVendors();
+      if (!mounted) return;
+      setState(() {
+        _vendors = result.data;
+        _isVendorLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _vendors = <GetCashierChildSelectVendorItem>[];
+        _isVendorLoading = false;
+      });
+    }
   }
 
   Future<void> _loadSubCategories(String categoryName) async {
@@ -248,15 +390,285 @@ class _CashierScreenState extends State<CashierScreen> {
     }
   }
 
+  AddDayBookLookupItem? _findByName(
+    List<AddDayBookLookupItem> items,
+    String? name,
+  ) {
+    if (name == null || name.isEmpty) return null;
+
+    for (final item in items) {
+      if (item.name == name) return item;
+    }
+    return null;
+  }
+
+  String _formatApiDate(String value) {
+    final parts = value.split('/');
+    return parts.length == 3 ? "${parts[2]}-${parts[1]}-${parts[0]}" : value;
+  }
+
+  String _currentFormSection() {
+    if (accountGroup == "ADD LEDGER KHATA") return 'LADGERKHATA';
+    if (accountGroup == "EXPENSES") return 'EXPENSES';
+    if (accountGroup == "Employee") return 'EMPLOYEE';
+    if (accountGroup == "Assets") return 'ASSETS';
+    return (typeDropdown?.isNotEmpty ?? false)
+        ? typeDropdown!.toUpperCase()
+        : accountGroup!.toUpperCase();
+  }
+
+  Future<bool> _showOtpDialog(String mobile, String amount) async {
+    setState(() => _isSaving = true);
+    final sendRes = await _authService.sendOtp(mobile: mobile, amount: amount);
+    setState(() => _isSaving = false);
+
+    if (sendRes == null || !sendRes.success) {
+      _showSnackBar('Failed to send OTP to $mobile');
+      return false;
+    }
+
+    bool isVerified = false;
+    final TextEditingController otpController = TextEditingController();
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('OTP Verification'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('OTP sent to $mobile'),
+              const SizedBox(height: 16),
+              TextField(
+                controller: otpController,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                decoration: InputDecoration(
+                  hintText: 'Enter OTP',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel', style: TextStyle(color: Colors.red)),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (otpController.text.isNotEmpty) {
+                  final verifyRes = await _authService.verifyOtp(
+                    mobile: mobile,
+                    otp: otpController.text,
+                  );
+                  if (verifyRes != null && verifyRes.success) {
+                    isVerified = true;
+                    if (context.mounted) Navigator.pop(context);
+                  } else {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Invalid OTP')),
+                      );
+                    }
+                  }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please enter OTP')),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              child: const Text(
+                'Submit OTP',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+    return isVerified;
+  }
+
   Future<void> _handleSave() async {
     if (accountGroup == "Customer" && typeDropdown?.toUpperCase() == "SCHOOL") {
       await _submitSchoolPayment();
     } else {
-      // Other sections logic will go here
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Save for this section is not yet implemented.')),
-      );
+      await _submitLedgerKhata();
     }
+  }
+
+  Future<void> _submitLedgerKhata() async {
+    if (accountGroup == null || transactionType == null) {
+      _showSnackBar('Please select Transaction Type and Account Group.');
+      return;
+    }
+
+    final selectedAccountGroup = _findByName(
+      _formData?.accountGroups ?? <AddDayBookLookupItem>[],
+      accountGroup,
+    );
+    final selectedAccountant = _findByName(
+      _formData?.accountants ?? <AddDayBookLookupItem>[],
+      accountantName,
+    );
+    final selectedToPayment = _findByName(
+      _formData?.allEmployees ?? <AddDayBookLookupItem>[],
+      selectedEmployee,
+    );
+
+    if (selectedAccountGroup == null || selectedAccountGroup.id.isEmpty) {
+      _showSnackBar('Please select a valid Account Group.');
+      return;
+    }
+    if (selectedAccountant == null || selectedAccountant.id.isEmpty) {
+      _showSnackBar('Please select Account Name.');
+      return;
+    }
+    if (accountGroup == "Employee" &&
+        (selectedToPayment == null || selectedToPayment.name.isEmpty)) {
+      _showSnackBar('Please select Employee.');
+      return;
+    }
+    if (amountController.text.trim().isEmpty) {
+      _showSnackBar('Please enter Amount.');
+      return;
+    }
+
+    setState(() => _isSaving = true);
+    final accMobileRes = await _authService.getAccountantMobile(
+      selectedAccountant.name,
+    );
+    setState(() => _isSaving = false);
+
+    final mobileToSend = accMobileRes?.mobile ?? '';
+    if (mobileToSend.isEmpty) {
+      _showSnackBar(
+        'Mobile number not found for accountant ${selectedAccountant.name}.',
+      );
+      return;
+    }
+
+    final bool otpVerified = await _showOtpDialog(
+      mobileToSend,
+      amountController.text.trim(),
+    );
+    if (!otpVerified) return;
+
+    setState(() => _isSaving = true);
+
+    print("Company Party => ${companyPartyController.text}");
+    print("Selected File => ${selectedFile?.path}");
+    print("Selected File Name => $selectedFileName");
+
+    try {
+      final response = await _addLadgerKhataService.submitLedgerKhata(
+        voucherNo: voucherController.text.trim(),
+        flag: transactionType ?? '',
+        type: typeDropdown ?? transactionType ?? '',
+        formSection: _currentFormSection(),
+        accountGroupId: selectedAccountGroup.id,
+        employeeId: selectedToPayment?.id ?? '',
+        toPayment: selectedToPayment?.name ?? selectedEmployee ?? '',
+        createdBy: selectedAccountant.name,
+        amount: amountController.text.trim(),
+        remarks: remarksController.text.trim(),
+        particularName: companyPartyController.text.trim(),
+
+        mobileNo: mobileController.text.trim(),
+        expenceBowcherNo2: expenseVoucherController.text.trim(),
+        receiptBowcherNo: receiptVoucherController.text.trim(),
+        imageFile: selectedFile,
+        imageFileName: selectedFileName,
+
+        backDate: backDateController.text.trim(),
+        extraFields: _buildSectionFields(),
+
+      );
+
+      if (!mounted) return;
+      if (response.status) {
+        _showSnackBar(response.message, backgroundColor: Colors.green);
+        _resetFormAfterSave();
+      } else {
+        _showSnackBar(response.message, backgroundColor: Colors.red);
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar(e.toString(), backgroundColor: Colors.red);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
+  }
+
+  Map<String, String> _buildSectionFields() {
+    final fields = <String, String>{
+      'CompanyParty': companyPartyController.text.trim(),
+      'Mobile': mobileController.text.trim(),
+      'ExpenseVoucherNo': expenseVoucherController.text.trim(),
+      'ReceiptVoucherNo': receiptVoucherController.text.trim(),
+      'PartyName': partyNameController.text.trim(),
+      'BillNo': billNoController.text.trim(),
+      'ExpenseDate': _formatApiDate(expenseDateController.text.trim()),
+      'Category': categoryDropdown ?? '',
+      'SubCategory': subCategoryDropdown ?? '',
+      'PaymentMode': paymentModeDropdown ?? '',
+      'Status': statusDropdown ?? '',
+      'TypeName': typeDropdown ?? '',
+    };
+
+    return Map<String, String>.fromEntries(
+      fields.entries.where((entry) => entry.value.isNotEmpty),
+    );
+  }
+
+  void _resetFormAfterSave() {
+    setState(() {
+      transactionType = null;
+      accountGroup = null;
+      accountantName = null;
+      typeDropdown = null;
+      categoryDropdown = null;
+      subCategoryDropdown = null;
+      selectedExpenseParty = null;
+      paymentModeDropdown = null;
+      statusDropdown = null;
+      selectedCustomer = null;
+      selectedCashier = null;
+      selectedAgent = null;
+      selectedEmployee = null;
+      selectedPublication = null;
+      selectedVendor = null;
+      _typeList = [];
+      _subCategories = <GetFormDateCashierSubCategoryItem>[];
+      _publications = <GetCashierChildSelectItem>[];
+      _vendors = <GetCashierChildSelectVendorItem>[];
+      amountController.clear();
+      remarksController.clear();
+      backDateController.clear();
+      companyPartyController.clear();
+      mobileController.clear();
+      expenseVoucherController.clear();
+      receiptVoucherController.clear();
+      partyNameController.clear();
+      expenseDateController.clear();
+      paymentDateController.clear();
+      cashierMobileController.clear();
+    });
+  }
+
+  void _showSnackBar(String message, {Color? backgroundColor}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: backgroundColor),
+    );
   }
 
   Future<void> _submitSchoolPayment() async {
@@ -270,32 +682,62 @@ class _CashierScreenState extends State<CashierScreen> {
       );
       return;
     }
+    if (transactionType == null || transactionType!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select Transaction Type')),
+      );
+      return;
+    }
+
+    final String mobileToSend = cashierMobileController.text.trim();
+    if (mobileToSend.isEmpty) {
+      _showSnackBar('Mobile number is missing.');
+      return;
+    }
+
+    final bool otpVerified = await _showOtpDialog(
+      mobileToSend,
+      amountController.text.trim(),
+    );
+    if (!otpVerified) return;
 
     setState(() => _isSaving = true);
 
     try {
-      final customerId = _formData?.customerList
-              .firstWhere((e) => e.name == selectedCustomer,
-                  orElse: () => AddDayBookLookupItem(id: '', name: ''))
-              .id ?? '';
+      final customerId =
+          _formData?.customerList
+              .firstWhere(
+                (e) => e.name == selectedCustomer,
+                orElse: () => AddDayBookLookupItem(id: '', name: ''),
+              )
+              .id ??
+          '';
 
-      final cashierId = _formData?.accountants
-              .firstWhere((e) => e.name == selectedCashier,
-                  orElse: () => AddDayBookLookupItem(id: '', name: ''))
-              .id ?? '';
+      final cashierId =
+          _formData?.accountants
+              .firstWhere(
+                (e) => e.name == selectedCashier,
+                orElse: () => AddDayBookLookupItem(id: '', name: ''),
+              )
+              .id ??
+          '';
 
-      final agentId = _formData?.allEmployees
-              .firstWhere((e) => e.name == selectedAgent,
-                  orElse: () => AddDayBookLookupItem(id: '', name: ''))
-              .id ?? '';
+      final agentId =
+          _formData?.allEmployees
+              .firstWhere(
+                (e) => e.name == selectedAgent,
+                orElse: () => AddDayBookLookupItem(id: '', name: ''),
+              )
+              .id ??
+          '';
 
-      final parts = paymentDateController.text.split('/');
-      final formattedDate = parts.length == 3
-          ? "${parts[2]}-${parts[1]}-${parts[0]}"
-          : paymentDateController.text;
+      final formattedDate = _formatApiDate(paymentDateController.text);
 
       final response = await _addLadgerKhataService.submitSchoolPayment(
         schoolId: customerId,
+        voucherNo: voucherController.text,
+        flag: transactionType ?? '',
+        type: transactionType ?? '',
         cashierId: cashierId,
         agentId: agentId,
         paymentDate: formattedDate,
@@ -306,30 +748,15 @@ class _CashierScreenState extends State<CashierScreen> {
 
       if (mounted) {
         if (response.status) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(response.message), backgroundColor: Colors.green),
-          );
-          setState(() {
-            selectedCustomer = null;
-            selectedCashier = null;
-            selectedAgent = null;
-            paymentDateController.clear();
-            amountController.clear();
-            remarksController.clear();
-            cashierMobileController.clear();
-            backDateController.clear();
-          });
+          _showSnackBar(response.message, backgroundColor: Colors.green);
+          _resetFormAfterSave();
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(response.message), backgroundColor: Colors.red),
-          );
+          _showSnackBar(response.message, backgroundColor: Colors.red);
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
-        );
+        _showSnackBar(e.toString(), backgroundColor: Colors.red);
       }
     } finally {
       if (mounted) {
@@ -399,10 +826,11 @@ class _CashierScreenState extends State<CashierScreen> {
               buildDropdown(
                 "Transaction Type",
                 transactionType,
-                const ["CREDIT", "DEBIT"],
+                const ["Credit", "Debit"],
                 (v) => setState(() => transactionType = v),
                 hint: "-- Select Type --",
               ),
+
               buildDropdown(
                 "Account Group",
                 accountGroup,
@@ -491,26 +919,101 @@ class _CashierScreenState extends State<CashierScreen> {
     if (accountGroup == "ADD LEDGER KHATA") {
       return Column(
         children: [
-          buildTextField("Company / Party", companyPartyController),
+          buildLabelField(
+            "Company / Party",
+            Column(
+              children: [
+                TextFormField(
+                  controller: companyPartyController,
+                  onChanged: _searchParty,
+                  decoration: InputDecoration(
+                    hintText: "Search Party",
+                    suffixIcon: _isSearchingParty
+                        ? const Padding(
+                            padding: EdgeInsets.all(12),
+                            child: SizedBox(
+                              height: 15,
+                              width: 15,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : null,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                ),
+
+                if (_partySuggestions.isNotEmpty)
+                  Container(
+                    width: double.infinity,
+                    constraints: const BoxConstraints(maxHeight: 200),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: _partySuggestions.length,
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                          dense: true,
+                          title: Text(_partySuggestions[index]),
+                          onTap: () {
+                            setState(() {
+                              companyPartyController.text =
+                                  _partySuggestions[index];
+                              _partySuggestions.clear();
+                            });
+                          },
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          ),
           buildTextField("Mobile Number", mobileController),
           buildTextField("Expense Voucher No", expenseVoucherController),
           buildTextField("Receipt Voucher No", receiptVoucherController),
           buildLabelField(
             "Attach File",
-            OutlinedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.upload_file, size: 18),
-              label: const Text("Choose File"),
-              style: OutlinedButton.styleFrom(
-                alignment: Alignment.centerLeft,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.image);
+                    if (result != null && result.files.single.path != null) {
+                      setState(() {
+                        selectedFile = File(result.files.single.path!);
+                        selectedFileName = result.files.single.name;
+                      });
+                    }
+                  },
+                  icon: const Icon(Icons.upload_file, size: 18),
+                  label: const Text("Choose File"),
+                  style: OutlinedButton.styleFrom(
+                    alignment: Alignment.centerLeft,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 14,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    side: BorderSide(color: Colors.grey.shade300),
+                    foregroundColor: Colors.black87,
+                  ),
                 ),
-                side: BorderSide(color: Colors.grey.shade300),
-                foregroundColor: Colors.black87,
-              ),
+                if (selectedFileName != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      selectedFileName!,
+                      style: const TextStyle(color: Colors.green, fontSize: 12),
+                    ),
+                  ),
+              ],
             ),
           ),
           buildTextField("Amount", amountController),
@@ -520,8 +1023,11 @@ class _CashierScreenState extends State<CashierScreen> {
             backDateController,
             hintText: "dd/mm/yyyy",
             readOnly: true,
-            suffixIcon:
-                const Icon(Icons.calendar_today, size: 18, color: Colors.black54),
+            suffixIcon: const Icon(
+              Icons.calendar_today,
+              size: 18,
+              color: Colors.black54,
+            ),
             onTap: () => _selectDate(context, backDateController),
           ),
           buildDropdown(
@@ -539,13 +1045,38 @@ class _CashierScreenState extends State<CashierScreen> {
       return Column(
         children: [
           if (_typeList.isNotEmpty)
-            buildDropdown(
-              "Type",
-              typeDropdown,
-              _typeList,
-              (v) => setState(() => typeDropdown = v),
-              hint: "-- Select Type --",
-            ),
+            buildDropdown("Type", typeDropdown, _typeList, (v) {
+              setState(() {
+                typeDropdown = v;
+                selectedPublication = null;
+                _publications = <GetCashierChildSelectItem>[];
+              });
+              if (v?.toUpperCase() == 'PUBLICATION') {
+                _loadPublications();
+              }
+            }, hint: "-- Select Type --"),
+          if (typeDropdown?.toUpperCase() == "PUBLICATION") ...[
+            if (_isPublicationLoading)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 16),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: SizedBox(
+                    height: 18,
+                    width: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              ),
+            if (!_isPublicationLoading)
+              buildDropdown(
+                "Select Publication",
+                selectedPublication,
+                publicationList,
+                (v) => setState(() => selectedPublication = v),
+                hint: "-- Select Publication --",
+              ),
+          ],
           if (typeDropdown?.toUpperCase() == "SCHOOL") ...[
             buildDropdown(
               "All Customer",
@@ -574,44 +1105,52 @@ class _CashierScreenState extends State<CashierScreen> {
               },
               hint: "-- Select Cashier --",
             ),
-            buildDropdown(
-              "Collected Agent",
-              selectedAgent,
-              agentList,
-              (v) async {
-                setState(() {
-                  selectedAgent = v;
-                  cashierMobileController.text = '';
-                });
-                if (v != null && v.isNotEmpty) {
-                  final response = await _authService.getAccountantMobile(v);
-                  if (response != null && mounted) {
-                    setState(() {
-                      cashierMobileController.text = response.mobile;
-                    });
-                  }
+            buildDropdown("Collected Agent", selectedAgent, agentList, (
+              v,
+            ) async {
+              setState(() {
+                selectedAgent = v;
+                cashierMobileController.text = '';
+              });
+              if (v != null && v.isNotEmpty) {
+                final response = await _authService.getAccountantMobile(v);
+                if (response != null && mounted) {
+                  setState(() {
+                    cashierMobileController.text = response.mobile;
+                  });
                 }
-              },
-              hint: "-- Select Agent --",
-            ),
+              }
+            }, hint: "-- Select Agent --"),
             buildTextField(
               "Payment Date",
               paymentDateController,
               hintText: "dd/mm/yyyy",
               readOnly: true,
-              suffixIcon: const Icon(Icons.calendar_today, size: 18, color: Colors.black54),
+              suffixIcon: const Icon(
+                Icons.calendar_today,
+                size: 18,
+                color: Colors.black54,
+              ),
               onTap: () => _selectDate(context, paymentDateController),
             ),
           ],
           buildTextField("Amount", amountController),
-          buildTextField("Cashier Mobile", cashierMobileController, readOnly: true),
+          buildTextField(
+            "Cashier Mobile",
+            cashierMobileController,
+            readOnly: true,
+          ),
           buildTextField("Remarks", remarksController),
           buildTextField(
             "Back Date",
             backDateController,
             hintText: "dd/mm/yyyy",
             readOnly: true,
-            suffixIcon: const Icon(Icons.calendar_today, size: 18, color: Colors.black54),
+            suffixIcon: const Icon(
+              Icons.calendar_today,
+              size: 18,
+              color: Colors.black54,
+            ),
             onTap: () => _selectDate(context, backDateController),
           ),
           buildDropdown(
@@ -629,13 +1168,38 @@ class _CashierScreenState extends State<CashierScreen> {
       return Column(
         children: [
           if (_typeList.isNotEmpty)
-            buildDropdown(
-              "Type",
-              typeDropdown,
-              _typeList,
-              (v) => setState(() => typeDropdown = v),
-              hint: "-- Select Type --",
-            ),
+            buildDropdown("Type", typeDropdown, _typeList, (v) {
+              setState(() {
+                typeDropdown = v;
+                selectedPublication = null;
+                _publications = <GetCashierChildSelectItem>[];
+              });
+              if (v?.toUpperCase() == 'PUBLICATION') {
+                _loadPublications();
+              }
+            }, hint: "-- Select Type --"),
+          if (typeDropdown?.toUpperCase() == "PUBLICATION") ...[
+            if (_isPublicationLoading)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 16),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: SizedBox(
+                    height: 18,
+                    width: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              ),
+            if (!_isPublicationLoading)
+              buildDropdown(
+                "Select Publication",
+                selectedPublication,
+                publicationList,
+                (v) => setState(() => selectedPublication = v),
+                hint: "-- Select Publication --",
+              ),
+          ],
 
           buildTextField("Amount", amountController),
           buildTextField("Remarks", remarksController),
@@ -644,8 +1208,11 @@ class _CashierScreenState extends State<CashierScreen> {
             backDateController,
             hintText: "dd/mm/yyyy",
             readOnly: true,
-            suffixIcon:
-                const Icon(Icons.calendar_today, size: 18, color: Colors.black54),
+            suffixIcon: const Icon(
+              Icons.calendar_today,
+              size: 18,
+              color: Colors.black54,
+            ),
             onTap: () => _selectDate(context, backDateController),
           ),
           buildDropdown(
@@ -658,8 +1225,6 @@ class _CashierScreenState extends State<CashierScreen> {
         ],
       );
     }
-
-
 
     if (accountGroup == "EXPENSES") {
       return Column(
@@ -675,8 +1240,11 @@ class _CashierScreenState extends State<CashierScreen> {
             expenseDateController,
             hintText: "dd/mm/yyyy",
             readOnly: true,
-            suffixIcon:
-                const Icon(Icons.calendar_today, size: 18, color: Colors.black54),
+            suffixIcon: const Icon(
+              Icons.calendar_today,
+              size: 18,
+              color: Colors.black54,
+            ),
             onTap: () => _selectDate(context, expenseDateController),
           ),
           buildDropdown(
@@ -746,8 +1314,11 @@ class _CashierScreenState extends State<CashierScreen> {
             backDateController,
             hintText: "dd/mm/yyyy",
             readOnly: true,
-            suffixIcon:
-                const Icon(Icons.calendar_today, size: 18, color: Colors.black54),
+            suffixIcon: const Icon(
+              Icons.calendar_today,
+              size: 18,
+              color: Colors.black54,
+            ),
             onTap: () => _selectDate(context, backDateController),
           ),
           buildDropdown(
@@ -761,16 +1332,196 @@ class _CashierScreenState extends State<CashierScreen> {
       );
     }
 
+    if (accountGroup == "Employee") {
+      return Column(
+        children: [
+          if (_typeList.isNotEmpty)
+            buildDropdown("Type", typeDropdown, _typeList, (v) {
+              setState(() {
+                typeDropdown = v;
+                selectedPublication = null;
+                _publications = <GetCashierChildSelectItem>[];
+              });
+              if (v?.toUpperCase() == 'PUBLICATION') {
+                _loadPublications();
+              }
+            }, hint: "-- Select Type --"),
+          if (typeDropdown?.toUpperCase() == "PUBLICATION") ...[
+            if (_isPublicationLoading)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 16),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: SizedBox(
+                    height: 18,
+                    width: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              ),
+            if (!_isPublicationLoading)
+              buildDropdown(
+                "Select Publication",
+                selectedPublication,
+                publicationList,
+                (v) => setState(() => selectedPublication = v),
+                hint: "-- Select Publication --",
+              ),
+          ],
+          buildDropdown(
+            "Select ",
+            selectedEmployee,
+            employeeList,
+            (v) => setState(() => selectedEmployee = v),
+            hint: "-- Select Employee --",
+          ),
+          buildTextField("Amount", amountController),
+          buildTextField("Remarks", remarksController),
+          buildTextField(
+            "Back Date",
+            backDateController,
+            hintText: "dd/mm/yyyy",
+            readOnly: true,
+            suffixIcon: const Icon(
+              Icons.calendar_today,
+              size: 18,
+              color: Colors.black54,
+            ),
+            onTap: () => _selectDate(context, backDateController),
+          ),
+          buildDropdown(
+            "Account Name",
+            accountantName,
+            accountantList,
+            (v) => setState(() => accountantName = v),
+            hint: "-- Select Accountant --",
+          ),
+        ],
+      );
+    }
+
+    if (accountGroup == "Purchase Party") {
+      return Column(
+        children: [
+          if (_typeList.isNotEmpty)
+            buildDropdown("Type", typeDropdown, _typeList, (v) {
+              setState(() {
+                typeDropdown = v;
+                selectedPublication = null;
+                selectedVendor = null;
+                _publications = <GetCashierChildSelectItem>[];
+                _vendors = <GetCashierChildSelectVendorItem>[];
+              });
+              if (v?.toUpperCase() == 'PUBLICATION') {
+                _loadPublications();
+              } else if (v?.toUpperCase() == 'VENDOR') {
+                _loadVendors();
+              }
+            }, hint: "-- Select Type --"),
+          if (typeDropdown?.toUpperCase() == "PUBLICATION") ...[
+            if (_isPublicationLoading)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 16),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: SizedBox(
+                    height: 18,
+                    width: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              ),
+            if (!_isPublicationLoading)
+              buildDropdown(
+                "Select Publication",
+                selectedPublication,
+                publicationList,
+                (v) => setState(() => selectedPublication = v),
+                hint: "-- Select Publication --",
+              ),
+          ],
+          if (typeDropdown?.toUpperCase() == "VENDOR") ...[
+            if (_isVendorLoading)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 16),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: SizedBox(
+                    height: 18,
+                    width: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              ),
+            if (!_isVendorLoading)
+              buildDropdown(
+                "Select Vendor",
+                selectedVendor,
+                vendorList,
+                (v) => setState(() => selectedVendor = v),
+                hint: "-- Select Vendor --",
+              ),
+          ],
+          buildTextField("Amount", amountController),
+          buildTextField("Remarks", remarksController),
+          buildTextField(
+            "Back Date",
+            backDateController,
+            hintText: "dd/mm/yyyy",
+            readOnly: true,
+            suffixIcon: const Icon(
+              Icons.calendar_today,
+              size: 18,
+              color: Colors.black54,
+            ),
+            onTap: () => _selectDate(context, backDateController),
+          ),
+          buildDropdown(
+            "Account Name",
+            accountantName,
+            accountantList,
+            (v) => setState(() => accountantName = v),
+            hint: "-- Select Accountant --",
+          ),
+        ],
+      );
+    }
+
     return Column(
       children: [
         if (_typeList.isNotEmpty)
-          buildDropdown(
-            "Type",
-            typeDropdown,
-            _typeList,
-            (v) => setState(() => typeDropdown = v),
-            hint: "-- Select Type --",
-          ),
+          buildDropdown("Type", typeDropdown, _typeList, (v) {
+            setState(() {
+              typeDropdown = v;
+              selectedPublication = null;
+              _publications = <GetCashierChildSelectItem>[];
+            });
+            if (v?.toUpperCase() == 'PUBLICATION') {
+              _loadPublications();
+            }
+          }, hint: "-- Select Type --"),
+        if (typeDropdown?.toUpperCase() == "PUBLICATION") ...[
+          if (_isPublicationLoading)
+            const Padding(
+              padding: EdgeInsets.only(bottom: 16),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: SizedBox(
+                  height: 18,
+                  width: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            ),
+          if (!_isPublicationLoading)
+            buildDropdown(
+              "Select Publication",
+              selectedPublication,
+              publicationList,
+              (v) => setState(() => selectedPublication = v),
+              hint: "-- Select Publication --",
+            ),
+        ],
         buildTextField("Amount", amountController),
         buildTextField("Remarks", remarksController),
         buildTextField(
@@ -778,8 +1529,11 @@ class _CashierScreenState extends State<CashierScreen> {
           backDateController,
           hintText: "dd/mm/yyyy",
           readOnly: true,
-          suffixIcon:
-              const Icon(Icons.calendar_today, size: 18, color: Colors.black54),
+          suffixIcon: const Icon(
+            Icons.calendar_today,
+            size: 18,
+            color: Colors.black54,
+          ),
           onTap: () => _selectDate(context, backDateController),
         ),
         buildDropdown(
@@ -803,10 +1557,7 @@ class _CashierScreenState extends State<CashierScreen> {
             width: 140,
             child: Text(
               title,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.black87,
-              ),
+              style: const TextStyle(fontSize: 14, color: Colors.black87),
             ),
           ),
           Expanded(child: field),
@@ -833,8 +1584,10 @@ class _CashierScreenState extends State<CashierScreen> {
         decoration: InputDecoration(
           hintText: hintText,
           suffixIcon: suffixIcon,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 14,
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
             borderSide: BorderSide(color: Colors.grey.shade300),
@@ -867,19 +1620,25 @@ class _CashierScreenState extends State<CashierScreen> {
         hint: Text(hint),
         style: const TextStyle(fontSize: 14, color: Colors.black87),
         decoration: InputDecoration(
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 14,
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
             borderSide: BorderSide(
-              color: isHighlighted ? Colors.blue.shade200 : Colors.grey.shade300,
+              color: isHighlighted
+                  ? Colors.blue.shade200
+                  : Colors.grey.shade300,
               width: isHighlighted ? 2 : 1,
             ),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
             borderSide: BorderSide(
-              color: isHighlighted ? Colors.blue.shade200 : Colors.grey.shade300,
+              color: isHighlighted
+                  ? Colors.blue.shade200
+                  : Colors.grey.shade300,
               width: isHighlighted ? 2 : 1,
             ),
           ),
