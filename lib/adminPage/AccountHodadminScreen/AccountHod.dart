@@ -3,10 +3,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../HomePagelist/addDayBook.dart';
+import '../../HomePagelist/cashier_view_cash_book_history_screen.dart';
 import '../../HomePagelist/dayBookHistory.dart';
 import '../Sale/SaleManagementScreen.dart';
 import 'AccountHodAddCashier.dart';
 import 'BankBook/AccountBankBook.dart';
+import 'BankBook/BankBookHistoryScreen.dart';
 import 'PURCHASE.dart';
 
 class AccountHodScreen extends StatelessWidget {
@@ -42,9 +44,25 @@ class AccountHodScreen extends StatelessWidget {
     },
 
     {
+      "title": "Cash Book",
+      "icon": Icons.highlight_sharp,
+      "color": Colors.blueGrey,
+    },
+
+    {
       "title": "Bank Book",
       "icon": Icons.comment_bank,
       "color": Colors.deepPurpleAccent,
+    },
+    {
+      "title": "ADD DAY\nBOOK",
+      "icon": Icons.add_business,
+      "color": Colors.deepPurple,
+    },
+    {
+      "title": "Bank history",
+      "icon": Icons.history,
+      "color": Colors.lightBlue
     },
   ];
 
@@ -111,7 +129,7 @@ class AccountHodScreen extends StatelessWidget {
               crossAxisCount: 4,
               crossAxisSpacing: 4.w,
               mainAxisSpacing: 4.h,
-              childAspectRatio: 0.50,
+              childAspectRatio: 0.65,
             ),
 
             itemBuilder: (context, index) {
@@ -192,6 +210,15 @@ class AccountHodScreen extends StatelessWidget {
         );
         break;
 
+      case "ADD DAY\nBOOK":
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => AddDayBook(),
+          ),
+        );
+        break;
+
 
       case "ADD CASHIER":
         Navigator.push(
@@ -202,11 +229,29 @@ class AccountHodScreen extends StatelessWidget {
         );
         break;
 
+      case "Cash Book":
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) =>CashierViewCashBookHistoryScreen (),
+          ),
+        );
+        break;
+
       case "Bank Book":
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => AccountBankBook (),
+          ),
+        );
+        break;
+
+        case "Bank history":
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => BankBookHistoryScreen (),
           ),
         );
         break;

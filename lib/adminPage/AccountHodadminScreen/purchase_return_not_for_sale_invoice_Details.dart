@@ -36,37 +36,24 @@ class _PurchaseReturnNotForSaleInvoiceScreenState
 
   Widget cell(String text,
       {FontWeight weight = FontWeight.normal,
-        TextAlign align = TextAlign.center}) {
+      TextAlign align = TextAlign.center,
+      Color? color}) {
     return Padding(
       padding: const EdgeInsets.all(6),
       child: Text(text,
           textAlign: align,
-          style: TextStyle(fontSize: 12, fontWeight: weight)),
+          style: TextStyle(fontSize: 12, fontWeight: weight, color: color)),
     );
   }
 
   String formatDate(String date) {
-    final d = DateTime.parse(date);
-    return "${d.day}/${d.month}/${d.year}";
-  }
-
-  Widget _row(String title, String value, {bool isBold = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(title,
-              style: TextStyle(
-                  fontWeight:
-                  isBold ? FontWeight.bold : FontWeight.normal)),
-          Text(value,
-              style: TextStyle(
-                  fontWeight:
-                  isBold ? FontWeight.bold : FontWeight.normal)),
-        ],
-      ),
-    );
+    if (date.isEmpty) return "";
+    try {
+      final d = DateTime.parse(date);
+      return "${d.day.toString().padLeft(2, '0')}-${d.month.toString().padLeft(2, '0')}-${d.year}";
+    } catch (e) {
+      return date;
+    }
   }
 
   @override
@@ -83,7 +70,7 @@ class _PurchaseReturnNotForSaleInvoiceScreenState
               final data = await future;
 
               final file =
-              await PurchaseReturnNotForSaleInvoicePdf.generate(data);
+                  await PurchaseReturnNotForSaleInvoicePdf.generate(data);
 
               await Share.shareXFiles(
                 [XFile(file.path)],
@@ -96,30 +83,28 @@ class _PurchaseReturnNotForSaleInvoiceScreenState
       body: FutureBuilder<PurchaseReturnNotForSaleInvoiceModel>(
         future: future,
         builder: (context, snapshot) {
-          if (!snapshot.hasData) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
+          }
+          if (!snapshot.hasData) {
+            return const Center(child: Text("No Data Found"));
           }
 
           final data = snapshot.data!;
           final grouped = groupData(data.data);
 
           int index = 1;
-          double totalQty = 0;
-          double totalAmount = 0;
+          int totalQty = 0;
           double subtotal = 0;
-
 
           for (var item in data.data) {
             subtotal += item.totalAmount;
             totalQty += item.qty;
           }
 
-// 👉 Example discount (you can make dynamic later)
-          double discountPercent = 10; // change as needed
-
-          double totalDiscount = (subtotal * discountPercent) / 100;
-          double grandTotal = subtotal - totalDiscount;
-
+          double discountPercent = 0; // Static discount as per UI
+          double grandTotal = data.grandTotal;
+          double amtWithDisc = subtotal - ((subtotal * discountPercent) / 100);
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -133,8 +118,7 @@ class _PurchaseReturnNotForSaleInvoiceScreenState
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-
-                      /// 🔥 HEADER
+                      /// 🔥 HEADER LOGO & COMPANY INFO
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -160,7 +144,7 @@ class _PurchaseReturnNotForSaleInvoiceScreenState
                               ),
                               SizedBox(height: 6),
                               Text(
-                                "D-1/20, SECTOR 22, GIDA, GORAKHPUR\nCont. - 9354918638",
+                                "D-1/20, SECTOR 22, GIDA, GORAKHPUR\nCont. - 9354918638, 9354918644\nGST No: 09AAGC0650B1Z2 | CIN No: U22222UP2015PTC068597",
                                 textAlign: TextAlign.center,
                                 style: TextStyle(fontSize: 12),
                               ),
@@ -168,28 +152,76 @@ class _PurchaseReturnNotForSaleInvoiceScreenState
                           ),
                         ],
                       ),
-
                       const SizedBox(height: 10),
-                      const Divider(),
+                      const Divider(thickness: 1.5, color: Colors.black),
+                      const SizedBox(height: 10),
 
-                      const Text("Purchase Return Invoice",
-                          style: TextStyle(fontSize: 16)),
+                      /// 🔥 TITLE
+                      const Text(
+                        "PURCHASE RETURN NOT FOR SALE INVOICE",
+                        style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red),
+                      ),
+                      const SizedBox(height: 15),
 
-                      const Divider(),
-
-                      /// 🔹 INFO TABLE
+                      /// 🔥 HEADER TABLE
                       Table(
-                        border: TableBorder.all(),
+                        border: TableBorder.all(color: Colors.black87),
+                        columnWidths: const {
+                          0: FlexColumnWidth(1),
+                          1: FlexColumnWidth(2),
+                          2: FlexColumnWidth(1),
+                        },
+                        children: [
+                          TableRow(
+                            children: [
+                              cell("Invoice No: ${data.billNo}", weight: FontWeight.bold),
+                              cell("Vender Name: ${data.publication}", weight: FontWeight.bold),
+                              cell("Bill Date: ${formatDate(data.date)}", weight: FontWeight.bold),
+                            ],
+                          ),
+                          TableRow(
+                            children: [
+                              cell("Supplier Invoice No:", weight: FontWeight.bold),
+                              cell("Address: ", weight: FontWeight.bold), // Address is not in model, left blank
+                              cell("Rec. Date: ${formatDate(data.date)}", weight: FontWeight.bold),
+                            ],
+                          ),
+                          TableRow(
+                            children: [
+                              cell("Transport:", weight: FontWeight.bold),
+                              cell("GR No:", weight: FontWeight.bold),
+                              const SizedBox(),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 15),
+
+                      /// 🔹 MAIN TABLE
+                      Table(
+                        border: TableBorder.all(color: Colors.black87),
+                        columnWidths: const {
+                          0: FixedColumnWidth(40),
+                          1: FlexColumnWidth(3),
+                          2: FixedColumnWidth(60),
+                          3: FixedColumnWidth(100),
+                          4: FixedColumnWidth(100),
+                          5: FixedColumnWidth(120),
+                        },
                         children: [
                           /// HEADER
                           TableRow(
-                            decoration: BoxDecoration(color: Colors.grey.shade300),
+                            decoration: BoxDecoration(color: Colors.grey.shade200),
                             children: [
                               cell("S.N.", weight: FontWeight.bold),
-                              cell("Book Name", weight: FontWeight.bold),
+                              cell("Book Name (Title)", weight: FontWeight.bold),
                               cell("Qty", weight: FontWeight.bold),
                               cell("Rate", weight: FontWeight.bold),
                               cell("Amount", weight: FontWeight.bold),
+                              cell("Amt With Disc.", weight: FontWeight.bold),
                             ],
                           ),
 
@@ -200,25 +232,32 @@ class _PurchaseReturnNotForSaleInvoiceScreenState
                             List<TableRow> rows = [];
 
                             rows.add(
-                              TableRow(children: [
-                                const SizedBox(),
-                                cell("Series: ${entry.key}",
-                                    align: TextAlign.left,
-                                    weight: FontWeight.bold),
-                                const SizedBox(),
-                                const SizedBox(),
-                                const SizedBox(),
-                              ]),
+                              TableRow(
+                                decoration: BoxDecoration(color: Colors.grey.shade100),
+                                children: [
+                                  const SizedBox(),
+                                  cell("Series: ${entry.key}",
+                                      align: TextAlign.left,
+                                      weight: FontWeight.bold,
+                                      color: Colors.blue.shade800),
+                                  const SizedBox(),
+                                  const SizedBox(),
+                                  const SizedBox(),
+                                  const SizedBox(),
+                                ],
+                              ),
                             );
 
                             for (var e in items) {
                               rows.add(TableRow(children: [
                                 cell("${index++}"),
-                                cell("${e.bookName} - ${e.subject} - ${e.classes}",
+                                cell(
+                                    "${e.bookName} - ${e.subject} - ${e.classes}",
                                     align: TextAlign.left),
                                 cell(e.qty.toString()),
                                 cell(e.rate.toStringAsFixed(2)),
                                 cell(e.totalAmount.toStringAsFixed(2)),
+                                const SizedBox(), // Amt with disc is empty for individual items in image
                               ]));
                             }
 
@@ -229,10 +268,10 @@ class _PurchaseReturnNotForSaleInvoiceScreenState
                           TableRow(
                             children: [
                               const SizedBox(),
-                              cell("Subtotal",
+                              cell("Subtotal:",
                                   align: TextAlign.right, weight: FontWeight.bold),
+                              cell(totalQty.toString(), weight: FontWeight.bold),
                               const SizedBox(),
-
                               cell("₹ ${subtotal.toStringAsFixed(2)}",
                                   weight: FontWeight.bold),
                               const SizedBox(),
@@ -241,47 +280,63 @@ class _PurchaseReturnNotForSaleInvoiceScreenState
 
                           /// 🔥 DISCOUNT %
                           TableRow(
+                            decoration: BoxDecoration(color: Colors.blue.shade50),
                             children: [
                               const SizedBox(),
-                              cell("Disc (%)", align: TextAlign.right),
+                              cell("Disc(%) :", align: TextAlign.right, weight: FontWeight.bold),
+                              cell("${discountPercent.toStringAsFixed(0)}", weight: FontWeight.bold),
                               const SizedBox(),
                               const SizedBox(),
-                              cell("${discountPercent.toStringAsFixed(0)} %"),
+                              cell("₹ ${amtWithDisc.toStringAsFixed(2)}", weight: FontWeight.bold),
+                            ],
+                          ),
+                          /// 🔥 GRAND TOTAL
+                          TableRow(
+                            decoration: BoxDecoration(color: Colors.green.shade100),
+                            children: [
+                              const SizedBox(),
+                              cell("Grand Total:",
+                                  align: TextAlign.right,
+                                  weight: FontWeight.bold),
+                              cell(totalQty.toString(), weight: FontWeight.bold),
+                              const SizedBox(),
+                              cell("₹ ${grandTotal.toStringAsFixed(2)}",
+                                  weight: FontWeight.bold),
+                              const SizedBox(),
                             ],
                           ),
 
                           /// 🔥 TOTAL DISCOUNT
                           TableRow(
+                            decoration: BoxDecoration(color: Colors.cyan.shade100),
                             children: [
                               const SizedBox(),
-                              cell("Total Discount", align: TextAlign.right),
-                              const SizedBox(),
-
-                              cell("₹ ${totalDiscount.toStringAsFixed(2)}"),
-                              const SizedBox(),
-                            ],
-                          ),
-
-                          /// 🔥 GRAND TOTAL
-                          TableRow(
-                            decoration: BoxDecoration(color: Colors.red.shade100),
-                            children: [
-                              const SizedBox(),
-                              cell("Grand Total",
+                              cell("Total Discount:",
                                   align: TextAlign.right,
                                   weight: FontWeight.bold),
+                              cell("${discountPercent.toStringAsFixed(0)}%", weight: FontWeight.bold),
                               const SizedBox(),
                               const SizedBox(),
-                              cell("₹ ${grandTotal.toStringAsFixed(2)}",
+                              cell("₹ ${amtWithDisc.toStringAsFixed(2)}",
                                   weight: FontWeight.bold),
                             ],
                           ),
                         ],
                       ),
-
-
-                      /// 🔥 SUMMARY (OUTSIDE TABLE ✅)
-
+                      
+                      const SizedBox(height: 30),
+                      
+                      /// 🔥 FOOTER
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Invoice Created By: ",
+                            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
                     ],
                   ),
                 ),

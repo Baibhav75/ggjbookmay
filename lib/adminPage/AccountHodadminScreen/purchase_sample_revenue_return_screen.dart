@@ -1,5 +1,6 @@
 import 'package:bookworld/adminPage/AccountHodadminScreen/purchase_return_sample_revenew_details_screen.dart';
 import 'package:flutter/material.dart';
+import '../BilingPurchase/sample_purchase_mix_report_screen.dart';
 import '/Model/purchase_sample_revenue_return_model.dart';
 import '/Service/purchase_sample_revenue_return_service.dart';
 
@@ -141,45 +142,92 @@ class _PurchaseSampleRevenueReturnScreenState
                                   child: Text("₹ ${item.amount.toStringAsFixed(2)}"),
                                 ),
                                 SizedBox(
-                                  width: 80,
+                                  width: 120,
                                   child: PopupMenuButton<String>(
                                     onSelected: (value) {
-                                      if (value == "details") {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>PurchaseReturnNotForSaleInvoiceScreen(
-                                              billNo: item.billNo,
+                                      switch (value) {
+                                        case "details":
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => PurchaseReturnNotForSaleInvoiceScreen(
+                                                billNo: item.billNo,
+                                              ),
                                             ),
-                                          ),
-                                        );
+                                          );
+                                          break;
+
+                                        case "ledger":
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                              content: Text("View Ledger"),
+                                            ),
+                                          );
+                                          break;
                                       }
                                     },
-                                    itemBuilder: (context) => [
-                                      const PopupMenuItem(
+                                    itemBuilder: (context) => const [
+                                      PopupMenuItem(
                                         value: "details",
                                         child: Row(
                                           children: [
                                             Icon(Icons.receipt_long, color: Colors.blue),
-                                            SizedBox(width: 8),
+                                            SizedBox(width: 10),
                                             Text("View Details"),
                                           ],
                                         ),
                                       ),
-                                      const PopupMenuItem(
+
+                                      PopupMenuItem(
+                                        value: "mixReport",
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.bar_chart, color: Colors.deepPurple),
+                                            SizedBox(width: 10),
+                                            Text("Mix Report"),
+                                          ],
+                                        ),
+                                      ),
+
+                                      PopupMenuItem(
                                         value: "ledger",
                                         child: Row(
                                           children: [
                                             Icon(Icons.account_balance_wallet, color: Colors.green),
-                                            SizedBox(width: 8),
+                                            SizedBox(width: 10),
                                             Text("View Ledger"),
                                           ],
                                         ),
                                       ),
                                     ],
 
-                                    /// 👇 THIS KEEPS YOUR SAME ICON
-                                    child: const Icon(Icons.visibility, color: Colors.blue),
+                                    child: ElevatedButton.icon(
+                                      onPressed: null,
+                                      icon: const Icon(
+                                        Icons.visibility,
+                                        size: 16,
+                                        color: Colors.white,
+                                      ),
+                                      label: const Text(
+                                        "View",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        disabledBackgroundColor: Colors.blue,
+                                        disabledForegroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 10,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ],

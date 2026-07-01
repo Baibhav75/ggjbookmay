@@ -2,6 +2,7 @@ import 'package:bookworld/adminPage/AccountHodadminScreen/purchase_not_for_sale_
 import 'package:bookworld/adminPage/AccountHodadminScreen/purchase_sample_invoice_DetailsInvoice.dart';
 import 'package:bookworld/adminPage/AccountHodadminScreen/purchase_sample_revenew_ledger_screen.dart';
 import 'package:flutter/material.dart';
+import '../BilingPurchase/sample_purchase_mix_report_screen.dart';
 import '/Model/purchase_sample_revenue_list_model.dart';
 import '/Service/purchase_sample_revenue_service.dart';
 
@@ -143,33 +144,46 @@ class _PurchaseSampleRevenueScreenState
                                   child: Text("₹ ${item.amount.toStringAsFixed(2)}"),
                                 ),
                                 SizedBox(
-                                  width: 80,
+                                  width: 100,
                                   child: PopupMenuButton<String>(
                                     onSelected: (value) {
-                                      if (value == "details") {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => PurchaseSampleInvoiceScreen (
-                                              billNo: item.billNo,
+                                      switch (value) {
+                                        case "details":
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => PurchaseSampleInvoiceScreen(
+                                                billNo: item.billNo,
+                                              ),
                                             ),
-                                          ),
-                                        );
-                                      } else if (value == "ledger") {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => PurchaseSampleRevenewLedgerScreen (
-                                              publicationId: item.publicationId,
-                                            ),
-                                          ),
-                                        );
+                                          );
+                                          break;
 
+                                        case "mixReport":
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => SamplePurchaseMixReportScreen(
+                                                publicationId: item.publicationId,
+                                              ),
+                                            ),
+                                          );
+                                          break;
+
+                                        case "ledger":
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => PurchaseSampleRevenewLedgerScreen(
+                                                publicationId: item.publicationId,
+                                              ),
+                                            ),
+                                          );
+                                          break;
                                       }
                                     },
-
-                                    itemBuilder: (context) => [
-                                      const PopupMenuItem(
+                                    itemBuilder: (context) => const [
+                                      PopupMenuItem(
                                         value: "details",
                                         child: Row(
                                           children: [
@@ -179,7 +193,17 @@ class _PurchaseSampleRevenueScreenState
                                           ],
                                         ),
                                       ),
-                                      const PopupMenuItem(
+                                      PopupMenuItem(
+                                        value: "mixReport",
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.analytics, color: Colors.deepPurple),
+                                            SizedBox(width: 8),
+                                            Text("Mix Report"),
+                                          ],
+                                        ),
+                                      ),
+                                      PopupMenuItem(
                                         value: "ledger",
                                         child: Row(
                                           children: [
@@ -190,9 +214,33 @@ class _PurchaseSampleRevenueScreenState
                                         ),
                                       ),
                                     ],
-
-                                    /// 👇 THIS IS YOUR ICON (CLICK AREA)
-                                    child: const Icon(Icons.visibility, color: Colors.blue),
+                                    child: ElevatedButton.icon(
+                                      onPressed: null,
+                                      icon: const Icon(
+                                        Icons.visibility,
+                                        size: 12,
+                                        color: Colors.white,
+                                      ),
+                                      label: const Text(
+                                        "View",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 8,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        disabledBackgroundColor: Colors.blue,
+                                        disabledForegroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 6,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ],

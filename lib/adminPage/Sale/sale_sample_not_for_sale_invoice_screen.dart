@@ -1,39 +1,36 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import '../../Model/sale_sample_not_for_sale_invoice_model.dart';
+import '../../Service/sale_sample_not_for_sale_invoice_service.dart';
 
-import '../../Model/view_agent_discount_details_model.dart';
-import '../../appDart/auth_servcie.dart';
-import '../../pdf/salePdf/view_agent_discount_pdf.dart';
+import 'package:share_plus/share_plus.dart';
+import '../../pdf/salePdf/sale_sample_not_for_sale_invoice_pdf.dart';
 
-class ViewAgentDiscountDetailsScreen extends StatefulWidget {
+class SaleSampleNotForSaleInvoiceScreen extends StatefulWidget {
   final String billNo;
 
-  const ViewAgentDiscountDetailsScreen({
-    super.key,
-    required this.billNo,
-  });
+  const SaleSampleNotForSaleInvoiceScreen({super.key, required this.billNo});
 
   @override
-  State<ViewAgentDiscountDetailsScreen> createState() =>
-      _ViewAgentDiscountDetailsScreenState();
+  State<SaleSampleNotForSaleInvoiceScreen> createState() =>
+      _SaleSampleNotForSaleInvoiceScreenState();
 }
 
-class _ViewAgentDiscountDetailsScreenState
-    extends State<ViewAgentDiscountDetailsScreen> {
-  late Future<ViewAgentDiscountDetailsModel?> future;
+Future<void> shareInvoice(SaleSampleNotForSaleInvoiceResponse data) async {
+  final file = await SaleSampleNotForSaleInvoicePdf.generate(data);
+
+  await Share.shareXFiles(
+    [XFile(file.path)],
+    text: "Sample Invoice ${data.invoice.billNo}",
+  );
+}
+
+class _SaleSampleNotForSaleInvoiceScreenState extends State<SaleSampleNotForSaleInvoiceScreen> {
+  late Future<SaleSampleNotForSaleInvoiceResponse?> future;
 
   @override
   void initState() {
     super.initState();
-    future = AuthService.getInvoiceDetails(widget.billNo);
-  }
-
-  String formatDate(String date) {
-    try {
-      return DateFormat("dd-MM-yyyy").format(DateTime.parse(date));
-    } catch (_) {
-      return "";
-    }
+    future = SaleSampleNotForSaleInvoiceService.fetchInvoice(widget.billNo);
   }
 
   Widget infoCell(String label, String value, {TextAlign align = TextAlign.center}) {
@@ -79,7 +76,8 @@ class _ViewAgentDiscountDetailsScreenState
     );
   }
 
-  Widget invoiceHeader(InvoiceDetails invoice) {
+  Widget invoiceHeader(SaleSampleNotForSaleInvoiceResponse data) {
+    final inv = data.invoice;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -87,19 +85,9 @@ class _ViewAgentDiscountDetailsScreenState
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Column(
-              children: [
-                SizedBox(
-                  width: 70,
-                  child: Image.asset(
-                    "assets/images/logo.png",
-                    height: 50,
-                    errorBuilder: (_, __, ___) => const Icon(
-                      Icons.menu_book,
-                      size: 50,
-                    ),
-                  ),
-                ),
-                const Text(
+              children: const [
+                Icon(Icons.menu_book_sharp, size: 45, color: Colors.brown),
+                Text(
                   "BOOK WORLD",
                   style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
                 ),
@@ -127,8 +115,8 @@ class _ViewAgentDiscountDetailsScreenState
         const Divider(color: Colors.black, thickness: 2),
         const SizedBox(height: 10),
         const Text(
-          "SALE INVOICE",
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: Color(0xFF2B4C7E), decoration: TextDecoration.underline),
+          "Sale Sample NotFor Sale Invoice",
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: Color(0xFF2B4C7E)),
         ),
         const SizedBox(height: 15),
         Table(
@@ -140,19 +128,19 @@ class _ViewAgentDiscountDetailsScreenState
           },
           children: [
             TableRow(children: [
-              infoCell("Invoice No: ", invoice.billNo),
-              infoCell("Party Name: ", invoice.schoolName),
-              infoCell("Bill Date: ", formatDate(invoice.billDate)),
+              infoCell("Invoice No: ", inv.billNo),
+              infoCell("Party Name: ", inv.partyName),
+              infoCell("Bill Date: ", inv.billDate.isNotEmpty ? inv.billDate.split("T")[0] : ""),
             ]),
             TableRow(children: [
-              infoCell("Address: ", invoice.address),
-              infoCell("Area Manager Name: ", invoice.managerName),
-              infoCell("Agent Name: ", invoice.agentName),
+              infoCell("Transport: ", inv.transport),
+              infoCell("Address: ", inv.address),
+              infoCell("Rec. Date: ", inv.recDate.isNotEmpty ? inv.recDate.split("T")[0] : ""),
             ]),
             TableRow(children: [
-              infoCell("Transport: ", invoice.transport),
-              const SizedBox(),
-              const SizedBox(),
+               const SizedBox(),
+               infoCell("Remark: ", inv.remark),
+               const SizedBox(),
             ]),
           ],
         ),
@@ -179,35 +167,22 @@ class _ViewAgentDiscountDetailsScreenState
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        title: Text(
-          "View Agent Discount Details ${widget.billNo}",
-        ),
+        title: Text("Invoice ${widget.billNo}"),
         backgroundColor: Colors.deepPurple,
-               foregroundColor: Colors.white,
-        //appBar: AppBar(
-        //         title: Text("Invoice ${widget.billNo}"),
-        //         backgroundColor: Colors.deepPurple,
-        //         foregroundColor: Colors.white,
-
-
-
+        foregroundColor: Colors.white,
         actions: [
           IconButton(
-            icon: const Icon(Icons.share),
+            icon: const Icon(Icons.picture_as_pdf),
             onPressed: () async {
-
-              final model =
-              await future;
-
-              if (model == null) return;
-
-              await ViewAgentDiscountPdf
-                  .generateAndShare(model);
+              final data = await future;
+              if (data != null) {
+                await shareInvoice(data);
+              }
             },
           ),
         ],
       ),
-      body: FutureBuilder<ViewAgentDiscountDetailsModel?>(
+      body: FutureBuilder<SaleSampleNotForSaleInvoiceResponse?>(
         future: future,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -216,31 +191,9 @@ class _ViewAgentDiscountDetailsScreenState
           if (!snapshot.hasData || snapshot.data == null) {
             return const Center(child: Text("No Data Found"));
           }
-
-          final response = snapshot.data!;
-          final invoice = response.invoiceDetails;
-          final summary = response.summary;
-          final items = response.items;
-
-          Map<String, List<InvoiceItem>> groupedItems = {};
-          for (var item in items) {
-            String key = "${item.series}|${item.publication}";
-            if (!groupedItems.containsKey(key)) {
-              groupedItems[key] = [];
-            }
-            groupedItems[key]!.add(item);
-          }
+          final data = snapshot.data!;
 
           int index = 1;
-
-          // Estimate global percentages to apply to groups
-          double globalDiscountPercent = summary.discountPercent;
-          double globalAgentCommPercent = summary.afterDiscountTotal > 0 
-              ? (summary.totalAgentCommission / summary.afterDiscountTotal * 100) 
-              : 0.0;
-          double globalManagerCommPercent = summary.afterDiscountTotal > 0 
-              ? (summary.totalManagerCommission / summary.afterDiscountTotal * 100) 
-              : 0.0;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -262,10 +215,10 @@ class _ViewAgentDiscountDetailsScreenState
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      invoiceHeader(invoice),
+                      invoiceHeader(data),
                       const SizedBox(height: 15),
-
-                      // TABLE HEADER
+                      
+                      // HEADER TABLE
                       Table(
                         border: TableBorder.all(color: Colors.black87),
                         columnWidths: colWidths,
@@ -283,29 +236,12 @@ class _ViewAgentDiscountDetailsScreenState
                           ),
                         ],
                       ),
-
+                      
                       // GROUPS
-                      ...groupedItems.entries.map((entry) {
-                        String series = entry.key.split('|')[0];
-                        String publication = entry.key.split('|')[1];
-                        List<InvoiceItem> group = entry.value;
-
-                        int groupQty = 0;
-                        double groupAmount = 0;
-
-                        for (var item in group) {
-                          groupQty += item.qty;
-                          groupAmount += item.totalAmount;
-                        }
-
-                        double groupDiscount = groupAmount * (globalDiscountPercent / 100);
-                        double groupAfterDisc = groupAmount - groupDiscount;
-                        double groupAgentComm = groupAfterDisc * (globalAgentCommPercent / 100);
-                        double groupManagerComm = groupAfterDisc * (globalManagerCommPercent / 100);
-
+                      ...data.seriesGroups.map((group) {
                         return Column(
                           children: [
-                            // Series and Publication row (no vertical borders)
+                            // Series/Publication Row
                             Container(
                               decoration: BoxDecoration(
                                 color: Colors.grey.shade50,
@@ -316,7 +252,7 @@ class _ViewAgentDiscountDetailsScreenState
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    "Series: $series",
+                                    "Series: ${group.series}",
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 12,
@@ -324,7 +260,7 @@ class _ViewAgentDiscountDetailsScreenState
                                     ),
                                   ),
                                   Text(
-                                    "Publication: $publication",
+                                    "Publication: ${group.publication}",
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 12,
@@ -334,7 +270,7 @@ class _ViewAgentDiscountDetailsScreenState
                                 ],
                               ),
                             ),
-                            // Group Items and Subtotals Table
+                            // Item & Subtotal Table
                             Table(
                               border: TableBorder(
                                 left: side, right: side, bottom: side,
@@ -342,19 +278,18 @@ class _ViewAgentDiscountDetailsScreenState
                               ),
                               columnWidths: colWidths,
                               children: [
-                                // Item Rows
-                                ...group.map((item) {
+                                ...group.items.map((item) {
                                   return TableRow(
                                     children: [
                                       tableCell("${index++}"),
                                       tableCell(
-                                        "${item.bookName} - ${item.classes}",
+                                        "${item.bookName} - ${item.subject} - ${item.classes}",
                                         align: TextAlign.left,
                                       ),
                                       tableCell(item.qty.toStringAsFixed(0)),
                                       tableCell(item.rate.toStringAsFixed(2)),
-                                      tableCell(item.totalAmount.toStringAsFixed(2)),
-                                      tableCell(item.totalAmount.toStringAsFixed(4)), // Amt With Disc per item
+                                      tableCell(item.amount.toStringAsFixed(2)),
+                                      tableCell(""),
                                     ],
                                   );
                                 }),
@@ -363,9 +298,9 @@ class _ViewAgentDiscountDetailsScreenState
                                   children: [
                                     const SizedBox(),
                                     tableCell("Subtotal:", align: TextAlign.right, weight: FontWeight.bold),
-                                    tableCell(groupQty.toString(), weight: FontWeight.bold),
+                                    tableCell(group.seriesQty.toStringAsFixed(0), weight: FontWeight.bold),
                                     const SizedBox(),
-                                    tableCell("₹ ${groupAmount.toStringAsFixed(2)}", weight: FontWeight.bold),
+                                    tableCell("₹ ${group.seriesTotal.toStringAsFixed(2)}", weight: FontWeight.bold),
                                     const SizedBox(),
                                   ],
                                 ),
@@ -374,35 +309,11 @@ class _ViewAgentDiscountDetailsScreenState
                                   decoration: BoxDecoration(color: Colors.blue.shade50),
                                   children: [
                                     const SizedBox(),
-                                    tableCell("Disc (${globalDiscountPercent.toStringAsFixed(2)} %):", align: TextAlign.right, weight: FontWeight.bold),
+                                    tableCell("Disc(%) :", align: TextAlign.right, weight: FontWeight.bold),
+                                    tableCell(group.seriesDiscount.toStringAsFixed(2), align: TextAlign.center, weight: FontWeight.bold),
                                     const SizedBox(),
                                     const SizedBox(),
-                                    const SizedBox(),
-                                    tableCell("₹ ${groupAfterDisc.toStringAsFixed(4)}", weight: FontWeight.bold),
-                                  ],
-                                ),
-                                // Agent Comm Row
-                                TableRow(
-                                  decoration: const BoxDecoration(color: Color(0xffefe4c1)),
-                                  children: [
-                                    const SizedBox(),
-                                    tableCell("Agent Commission (${globalAgentCommPercent.toStringAsFixed(2)} %):", align: TextAlign.right, weight: FontWeight.bold),
-                                    const SizedBox(),
-                                    const SizedBox(),
-                                    tableCell("₹ ${groupAgentComm.toStringAsFixed(2)}", weight: FontWeight.bold),
-                                    const SizedBox(),
-                                  ],
-                                ),
-                                // Area Mgr Comm Row
-                                TableRow(
-                                  decoration: const BoxDecoration(color: Color(0xffe6f5dd)),
-                                  children: [
-                                    const SizedBox(),
-                                    tableCell("Area Manager Commission (${globalManagerCommPercent.toStringAsFixed(2)} %):", align: TextAlign.right, weight: FontWeight.bold),
-                                    const SizedBox(),
-                                    const SizedBox(),
-                                    tableCell("₹ ${groupManagerComm.toStringAsFixed(2)}", weight: FontWeight.bold),
-                                    const SizedBox(),
+                                    tableCell("₹ ${group.afterDiscount.toStringAsFixed(4)}", weight: FontWeight.bold),
                                   ],
                                 ),
                               ],
@@ -411,7 +322,7 @@ class _ViewAgentDiscountDetailsScreenState
                         );
                       }).toList(),
 
-                      // GRAND TOTALS
+                      // GRAND TOTAL TABLE
                       Table(
                         border: TableBorder(
                           left: side, right: side, bottom: side,
@@ -420,71 +331,32 @@ class _ViewAgentDiscountDetailsScreenState
                         columnWidths: colWidths,
                         children: [
                           TableRow(
-                            decoration: BoxDecoration(color: Colors.green.shade100),
+                            decoration: BoxDecoration(color: Colors.green.shade200),
                             children: [
                               const SizedBox(),
                               tableCell("Grand Total:", align: TextAlign.right, weight: FontWeight.bold),
-                              tableCell(summary.totalQty.toString(), weight: FontWeight.bold),
+                              tableCell(data.grandTotalQty.toStringAsFixed(0), weight: FontWeight.bold),
                               const SizedBox(),
-                              tableCell("₹ ${summary.grandTotal.toStringAsFixed(2)}", weight: FontWeight.bold),
-                              const SizedBox(),
-                            ],
-                          ),
-                          TableRow(
-                            decoration: BoxDecoration(color: Colors.cyan.shade50),
-                            children: [
-                              const SizedBox(),
-                              tableCell("Total Discount (${summary.discountPercent.toStringAsFixed(2)} %):", align: TextAlign.right, weight: FontWeight.bold),
-                              const SizedBox(),
-                              const SizedBox(),
-                              const SizedBox(),
-                              tableCell("₹ ${summary.afterDiscountTotal.toStringAsFixed(4)}", weight: FontWeight.bold),
-                            ],
-                          ),
-                          TableRow(
-                            decoration: BoxDecoration(color: Colors.red.shade50),
-                            children: [
-                              const SizedBox(),
-                              tableCell("Total Agent Commission:", align: TextAlign.right, weight: FontWeight.bold),
-                              const SizedBox(),
-                              const SizedBox(),
-                              tableCell("₹ ${summary.totalAgentCommission.toStringAsFixed(2)}", weight: FontWeight.bold),
+                              tableCell("₹ ${data.grandTotal.toStringAsFixed(2)}", weight: FontWeight.bold),
                               const SizedBox(),
                             ],
                           ),
                           TableRow(
-                            decoration: BoxDecoration(color: Colors.orange.shade50),
+                            decoration: BoxDecoration(color: Colors.cyan.shade100),
                             children: [
                               const SizedBox(),
-                              tableCell("Total Manager Commission:", align: TextAlign.right, weight: FontWeight.bold),
+                              tableCell("Total Discount:", align: TextAlign.right, weight: FontWeight.bold),
+                              tableCell("${data.discountPercent.toStringAsFixed(2)}%", align: TextAlign.center, weight: FontWeight.bold),
                               const SizedBox(),
                               const SizedBox(),
-                              tableCell("₹ ${summary.totalManagerCommission.toStringAsFixed(2)}", weight: FontWeight.bold),
-                              const SizedBox(),
+                              tableCell("₹ ${data.afterDiscountTotal.toStringAsFixed(4)}", weight: FontWeight.bold),
                             ],
                           ),
                         ],
                       ),
 
                       const SizedBox(height: 30),
-                      Row(
-                        children: const [
-                          Expanded(
-                            child: Text(
-                              "Invoice Created By: __________________",
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              "Rechecked By: __________________",
-                              textAlign: TextAlign.right,
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
+                      Text("Invoice Created By: ${data.invoice.createdBy}", style: const TextStyle(fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ),

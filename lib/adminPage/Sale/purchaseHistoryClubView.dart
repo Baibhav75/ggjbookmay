@@ -6,6 +6,9 @@ import '../AccountHodadminScreen/PubchaseEnterInvoice.dart';
 import '../AccountHodadminScreen/PurchaseMixReportScreen.dart';
 import '../AccountHodadminScreen/PurchaseStock_register_screen.dart';
 import '../AccountHodadminScreen/ViewCompanyDiscountScreen.dart';
+import '../BilingPurchase/purchase_club_final_discount_ledger_screen.dart';
+import '../BilingPurchase/purchase_pub_discount_ledger_screen.dart';
+import '../BilingPurchase/sample_purchase_mix_report_screen.dart';
 import '../PurchaseReturn/PurchaseViewMrpLedger.dart';
 import '/Model/purchase_history_model.dart';
 import '/Service/purchase_history_service.dart';
@@ -325,46 +328,52 @@ class _SalePurchaseClubInvoiceHistoryState
                                                                   .publicationId
                                                                   .toString())));
                                               break;
-                                            case 'company_ledger':
-                                              print("Company Ledger");
-                                              break;
                                             case 'publication_ledger':
-                                              print("Publication Ledger");
+                                              print("PartyId: ${item.partyId}");
+
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (_) => PurchasePubDiscountLedgerScreen(
+                                                    partyId: item.partyId,
+                                                  ),
+                                                ),
+                                              );
+                                              break;
+
+                                            case 'Final Discount Ledger':
+                                              print("PartyId: ${item.partyId}");
+
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (_) => PurchaseClubFinalDiscountLedgerScreen(
+                                                    partyId: item.partyId,
+                                                  ),
+                                                ),
+                                              );
                                               break;
                                           }
                                         },
                                         itemBuilder: (context) => [
-                                          _menuItem("1. View MRP Invoice",
-                                              "view_mrp_invoice"),
-                                          _menuItem(
-                                              "2. Edit Invoice", "edit_invoice"),
-                                          _menuItem(
-                                              "3. Add New Product In Invoice",
-                                              "add_product"),
-                                          _menuItem("4. View Invoice Image",
-                                              "view_image"),
-                                          _menuItem(
-                                              "5. View Company Discount Invoice",
-                                              "company_discount"),
-                                          _menuItem(
-                                              "6. View Publication Discount Invoice",
-                                              "publication_discount"),
-                                          _menuItem("7. View Only MRP Invoice",
-                                              "only_mrp"),
-                                          _menuItem("8. View MixReport",
+                                          _menuItem("1. View MixReport",
                                               "mix_report"),
-                                          _menuItem("9. View Stock Register",
+                                          _menuItem("2. View Stock Register",
                                               "stock_register"),
-                                          _menuItem("10. View MixReport PubDisc",
+                                          _menuItem("3. View MixReport PubDisc",
                                               "mix_pub_disc"),
                                           _menuItem(
-                                              "11. View MRP Ledger", "mrp_ledger"),
-                                          _menuItem(
-                                              "12. View Company Discount Ledger",
+                                              "4. View Company Discount Ledger",
                                               "company_ledger"),
                                           _menuItem(
-                                              "13. View Publication Discount Ledger",
+                                              "A. View MRP Ledger", "mrp_ledger"),
+
+                                          _menuItem(
+                                              "B. Pub Publication Discount Ledger",
                                               "publication_ledger"),
+                                          _menuItem(
+                                              "C. Final Discount Ledger",
+                                              "Final Discount Ledger"),
                                         ],
                                         child: Container(
                                           padding: const EdgeInsets.symmetric(

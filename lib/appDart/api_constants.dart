@@ -39,7 +39,7 @@ class ApiConstants {
 
   // add day Book hstory
   static const String dayBookDetails =
-      "$baseUrl/Ledger/ViewDetailsGenral";
+      "$baseUrl/Ledger/ViewDetailsGenral";  ///purchaseReturnNotForSaleInvoice
  // Sample Bill ladger history invoice
   static String sampleSaleLedger(String schoolName) {
     return "$baseUrl/LedgerSaleSample/ViewLedgerSaleSample?schoolname=$schoolName";

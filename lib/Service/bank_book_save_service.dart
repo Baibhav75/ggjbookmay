@@ -16,6 +16,8 @@ class BankBookSaveService {
     required String creatorName,
     required String paymentDate,
     required String voucherNo,
+    String? toPayment,
+    String? complaintImagePath,
   }) async {
 
     try {
@@ -37,6 +39,16 @@ class BankBookSaveService {
       request.fields["CreatorName"] = creatorName;
       request.fields["PaymentDate"] = paymentDate;
       request.fields["VoucherNo"] = voucherNo;
+      if (toPayment != null) {
+        request.fields["ToPayment"] = toPayment;
+      }
+
+      if (complaintImagePath != null && complaintImagePath.isNotEmpty) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'ComplaintImage', 
+          complaintImagePath,
+        ));
+      }
 
       var response = await request.send();
 

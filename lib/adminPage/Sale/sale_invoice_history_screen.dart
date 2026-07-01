@@ -1,6 +1,7 @@
 import 'package:bookworld/adminPage/Sale/sale_details_mrp_screen.dart';
 import 'package:bookworld/adminPage/Sale/sale_invoice_details_screen.dart';
 import 'package:bookworld/adminPage/Sale/sale_view_mrp_ledger_screen.dart';
+import 'package:bookworld/adminPage/Sale/view_agent_discount_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../appDart/discrete_circular_loader.dart';
@@ -314,7 +315,14 @@ class _SaleInvoiceClubHistoryScreenState
                                                 break;
 
                                               case "agent_discount":
-                                                print("Agent Discount Details");
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (_) => ViewAgentDiscountDetailsScreen (
+                                                      billNo: item.billNo,
+                                                    ),
+                                                  ),
+                                                );
                                                 break;
 
                                               case "edit":

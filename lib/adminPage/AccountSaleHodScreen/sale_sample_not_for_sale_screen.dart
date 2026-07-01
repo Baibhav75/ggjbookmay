@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../Sale/sale_sample_not_for_sale_invoice_screen.dart';
 import '/Model/sale_sample_not_for_sale_list_model.dart';
 import '/Service/sale_sample_not_for_sale_list_service.dart';
 
@@ -149,12 +150,38 @@ class _SaleSampleNotForSaleScreenState
                                   child: Text("₹ ${item.amount.toStringAsFixed(2)}"),
                                 ),
                                 SizedBox(
-                                  width: 80,
-                                  child: IconButton(
-                                    icon: const Icon(Icons.visibility, color: Colors.blue),
+                                  width: 100,
+                                  child: ElevatedButton.icon(
+                                    icon: const Icon(
+                                      Icons.visibility,
+                                      size: 16,
+                                      color: Colors.white,
+                                    ),
+                                    label: const Text(
+                                      "View",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.blue,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 10,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                    ),
                                     onPressed: () {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text("View Bill ${item.billNo}")),
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => SaleSampleNotForSaleInvoiceScreen(
+                                            billNo: item.billNo,
+                                          ),
+                                        ),
                                       );
                                     },
                                   ),

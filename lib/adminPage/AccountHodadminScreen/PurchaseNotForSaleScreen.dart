@@ -142,55 +142,68 @@ class _PurchaseNotForSaleScreenState
             ),
           ),
 
-          /// 🔥 TABLE HEADER (Horizontal Scroll)
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Container(
-              width: 800,
-              color: Colors.grey.shade200,
-              padding: const EdgeInsets.all(10),
-              child: Row(
-                children: const [
-                  Expanded(
-                      child: Text("Sr No",
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold))),
-                  Expanded(
-                      child: Text("Bill No",
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold))),
-                  Expanded(
-                      child: Text("Publication",
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold))),
-                  Expanded(
-                      child: Text("Date",
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold))),
-                  Expanded(
-                      child: Text("Action",
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold))),
-                ],
-              ),
-            ),
-          ),
-
-          /// 🔥 LIST (Horizontal + Vertical Scroll)
+          /// 🔥 UNIFIED TABLE (Horizontal + Vertical Scroll)
           Expanded(
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: SizedBox(
-                width: 800,
-                child: ListView.builder(
+                width: 900, // Fixed width to ensure scrolling
+                child: Column(
+                  children: [
+                    /// 🔥 TABLE HEADER
+                    Container(
+                      color: Colors.grey.shade200,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                      child: Row(
+                        children: const [
+                          Expanded(
+                              flex: 1,
+                              child: Text("Sr No",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold))),
+                          Expanded(
+                              flex: 2,
+                              child: Text("Bill No",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold))),
+                          Expanded(
+                              flex: 4,
+                              child: Text("Publication",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold))),
+                          Expanded(
+                              flex: 2,
+                              child: Text("Date",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold))),
+                          Expanded(
+                              flex: 2,
+                              child: Text("Amount",
+                                  textAlign: TextAlign.right,
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold))),
+                          Expanded(
+                              flex: 2,
+                              child: Text("Action",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold))),
+                        ],
+                      ),
+                    ),
+
+                    /// 🔥 LIST BODY
+                    Expanded(
+                      child: ListView.builder(
                   controller: _scrollController,
                   itemCount: filteredList.length,
                   itemBuilder: (context, index) {
                     final item = filteredList[index];
 
                     return Container(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                       decoration: BoxDecoration(
+                        color: index % 2 == 0 ? Colors.white : Colors.grey.shade50,
                         border: Border(
                           bottom: BorderSide(
                               color: Colors.grey.shade300),
@@ -198,80 +211,91 @@ class _PurchaseNotForSaleScreenState
                       ),
                       child: Row(
                         children: [
-                          Expanded(child: Text("${index + 1}")),
-                          Expanded(child: Text(item.billNo)),
+                          Expanded(flex: 1, child: Text("${index + 1}")),
+                          Expanded(flex: 2, child: Text(item.billNo)),
                           Expanded(
+                            flex: 4,
                             child: Text(
                               item.publication,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           Expanded(
+                              flex: 2,
                               child: Text(formatDate(item.date))),
                           Expanded(
-                            child: PopupMenuButton<String>(
-                              onSelected: (value) {
-                                if (value == "details") {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => PurchaseNotForSaleInvoiceScreen(
-                                        billNo: item.billNo,
+                              flex: 2,
+                              child: Text(
+                                "₹ ${item.amount.toStringAsFixed(2)}",
+                                textAlign: TextAlign.right,
+                                style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.black87),
+                              )),
+                          Expanded(
+                            flex: 2,
+                            child: Align(
+                              alignment: Alignment.center,
+                              child: PopupMenuButton<String>(
+                                onSelected: (value) {
+                                  if (value == "details") {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => PurchaseNotForSaleInvoiceScreen(
+                                          billNo: item.billNo,
+                                        ),
                                       ),
-                                    ),
-                                  );
-                                } else if (value == "ledger") {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => PurchaseNotForSaleLedgerScreen(
-                                        publicationId: item.publicationId,
+                                    );
+                                  } else if (value == "ledger") {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => PurchaseNotForSaleLedgerScreen(
+                                          publicationId: item.publicationId,
+                                        ),
                                       ),
+                                    );
+                                  }
+                                },
+                                itemBuilder: (context) => [
+                                  const PopupMenuItem(
+                                    value: "details",
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.receipt_long, color: Colors.blue),
+                                        SizedBox(width: 8),
+                                        Text("View Details"),
+                                      ],
                                     ),
-                                  );
-                                }
-                              },
-                              itemBuilder: (context) => [
-                                const PopupMenuItem(
-                                  value: "details",
-                                  child: Row(
+                                  ),
+                                  const PopupMenuItem(
+                                    value: "ledger",
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.account_balance_wallet, color: Colors.green),
+                                        SizedBox(width: 8),
+                                        Text("View Ledger"),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade600,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(Icons.receipt_long, color: Colors.blue),
-                                      SizedBox(width: 8),
-                                      Text("View Details"),
+                                      Icon(Icons.visibility, color: Colors.white, size: 16),
+                                      SizedBox(width: 5),
+                                      Text(
+                                        "View",
+                                        style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                      ),
                                     ],
                                   ),
-                                ),
-                                const PopupMenuItem(
-                                  value: "ledger",
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.account_balance_wallet, color: Colors.green),
-                                      SizedBox(width: 8),
-                                      Text("View Ledger"),
-                                    ],
-                                  ),
-                                ),
-                              ],
-
-                              /// 👇 THIS IS YOUR BUTTON UI
-                              /// 🔥 BUTTON UI
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue,
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.visibility, color: Colors.white, size: 16),
-                                    SizedBox(width: 5),
-                                    Text(
-                                      "View",
-                                      style: TextStyle(color: Colors.white, fontSize: 12),
-                                    ),
-                                  ],
                                 ),
                               ),
                             ),
@@ -282,12 +306,11 @@ class _PurchaseNotForSaleScreenState
                   },
                 ),
               ),
-            ),
-          ),
+
 
           /// 🔥 GRAND TOTAL
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
             color: Colors.deepPurple.shade50,
             child: Row(
               mainAxisAlignment:
@@ -295,18 +318,22 @@ class _PurchaseNotForSaleScreenState
               children: [
                 const Text(
                   "Grand Total",
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 Text(
-                  grandTotal.toStringAsFixed(2),
+                  "₹ ${grandTotal.toStringAsFixed(2)}",
                   style: const TextStyle(
-                      fontWeight: FontWeight.bold),
+                      fontWeight: FontWeight.bold, fontSize: 16, color: Colors.deepPurple),
                 ),
               ],
             ),
           )
         ],
       ),
+    )
+    ),
+          ),
+    ],),
     );
   }
 }

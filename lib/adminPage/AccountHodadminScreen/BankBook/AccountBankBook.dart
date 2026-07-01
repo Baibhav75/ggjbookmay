@@ -13,6 +13,7 @@ import '../../../Service/CategoryAccountGroupTypeService.dart';
 import '../../../Service/add_day_book_form_data_service.dart';
 import '../../../Service/sell_school_list_service.dart';
 import '../../../Service/get_cashier_child_select_service.dart';
+import '../../../Service/bank_book_save_service.dart';
 import '../../../appDart/auth_servcie.dart';
 
 class AccountBankBook extends StatefulWidget {
@@ -159,15 +160,13 @@ class _AccountBankBookState extends State<AccountBankBook> {
 
     // Fetch accountants + accountNameList + employeeList via day book service
     final dayBookResult = await AddDayBookFormDataService().fetchFormData();
-    if (dayBookResult != null) {
-      accountantList = dayBookResult.accountants;
-      accountNameList = dayBookResult.accountants;
-        // Populate investors list
-        investorList = dayBookResult.investors;
-      employeeList = dayBookResult.allEmployees;
-      // Load expense parties for EXPENSES group
-      expensePartyList = dayBookResult.expenseParties;
-    }
+    accountantList = dayBookResult.accountants;
+    accountNameList = dayBookResult.accountants;
+    // Populate investors list
+    investorList = dayBookResult.investors;
+    employeeList = dayBookResult.allEmployees;
+    // Load expense parties for EXPENSES group
+    expensePartyList = dayBookResult.expenseParties;
 
     // Fetch school list for dropdown
     try {
@@ -628,93 +627,97 @@ class _AccountBankBookState extends State<AccountBankBook> {
                     hint: "-- Select Category --",
                   ),
                 ] else if (_groupName == 'employee') ...[
-                  buildDropdown(
-                    "Select Employee",
-                    selectedEmployeeName,
-                    employeeList.map((e) => e.name).toList(),
-                    (v) => setState(() => selectedEmployeeName = v),
-                    hint: "-- Select Employee --",
-                  ),
-                  buildTextField(
-                    "Complaint Details",
-                    complaintDetailsController,
-                    hintText: "Complaint likho...",
-                    maxLines: 3,
-                  ),
-                  buildDropdown(
-                    "Loss Type",
-                    selectedLossType,
-                    ['Loss Hua Hai', 'No Loss'], // Dummy data
-                    (v) => setState(() => selectedLossType = v),
-                    hint: "-- Select Loss Type --",
-                  ),
-                  if (selectedLossType != 'No Loss')
+                  if (selectedParty?.toUpperCase() == 'COMPLAINT LOSS') ...[
                     buildTextField(
-                      "Loss Amount (₹)",
-                      lossAmountController,
-                      hintText: "0.00",
+                      "Complaint Details",
+                      complaintDetailsController,
+                      hintText: "Complaint likho...",
+                      maxLines: 3,
                     ),
-                  buildLabelField(
-                    "Complaint Image",
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            ElevatedButton.icon(
-                              onPressed: _pickImage,
-                              icon: const Icon(Icons.upload_file, size: 16),
-                              label: const Text("Choose File"),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.grey.shade200,
-                                foregroundColor: Colors.black87,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4),
+                    buildDropdown(
+                      "Loss Type",
+                      selectedLossType,
+                      ['Loss Hua Hai', 'No Loss'], // Dummy data
+                      (v) => setState(() => selectedLossType = v),
+                      hint: "-- Select Loss Type --",
+                    ),
+                    if (selectedLossType != 'No Loss')
+                      buildTextField(
+                        "Loss Amount (₹)",
+                        lossAmountController,
+                        hintText: "0.00",
+                      ),
+                    buildLabelField(
+                      "Complaint Image",
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              ElevatedButton.icon(
+                                onPressed: _pickImage,
+                                icon: const Icon(Icons.upload_file, size: 16),
+                                label: const Text("Choose File"),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.grey.shade200,
+                                  foregroundColor: Colors.black87,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                _complaintImage != null
-                                    ? _complaintImage!.name
-                                    : "No file chosen",
-                                style: TextStyle(
-                                  color: _complaintImage != null
-                                      ? Colors.green.shade700
-                                      : Colors.black87,
-                                  fontSize: 13,
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  _complaintImage != null
+                                      ? _complaintImage!.name
+                                      : "No file chosen",
+                                  style: TextStyle(
+                                    color: _complaintImage != null
+                                        ? Colors.green.shade700
+                                        : Colors.black87,
+                                    fontSize: 13,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                            if (_complaintImage != null)
-                              IconButton(
-                                icon: const Icon(Icons.close,
-                                    size: 18, color: Colors.red),
-                                tooltip: "Remove image",
-                                onPressed: () {
-                                  setState(() => _complaintImage = null);
-                                },
-                              ),
-                          ],
-                        ),
-                        if (_complaintImage != null) ...[
-                          const SizedBox(height: 8),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(6),
-                            child: Image.file(
-                              File(_complaintImage!.path),
-                              height: 140,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                            ),
+                              if (_complaintImage != null)
+                                IconButton(
+                                  icon: const Icon(Icons.close,
+                                      size: 18, color: Colors.red),
+                                  tooltip: "Remove image",
+                                  onPressed: () {
+                                    setState(() => _complaintImage = null);
+                                  },
+                                ),
+                            ],
                           ),
+                          if (_complaintImage != null) ...[
+                            const SizedBox(height: 8),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: Image.file(
+                                File(_complaintImage!.path),
+                                height: 140,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
-                  ),
+                  ] else ...[
+                    buildDropdown(
+                      "Select Employee",
+                      selectedEmployeeName,
+                      employeeList.map((e) => e.name).toList(),
+                      (v) => setState(() => selectedEmployeeName = v),
+                      hint: "-- Select Employee --",
+                    ),
+                    buildTextField("Amount", amountController),
+                  ],
                   buildTextField("Remarks", remarksController),
                   buildTextField(
                     "BackDates",
@@ -833,8 +836,99 @@ class _AccountBankBookState extends State<AccountBankBook> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      // Save logic goes here
+                    onPressed: () async {
+                      // Validate required fields
+                      if (selectedBank == null || selectedBank!.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Please select a bank')),
+                        );
+                        return;
+                      }
+                      String finalAmount = amountController.text.trim();
+                      if (_groupName == 'employee' && selectedParty?.toUpperCase() == 'COMPLAINT LOSS') {
+                        finalAmount = lossAmountController.text.trim();
+                        if (finalAmount.isEmpty && selectedLossType != 'No Loss') {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Please enter loss amount')),
+                          );
+                          return;
+                        }
+                      } else {
+                        if (finalAmount.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Please enter amount')),
+                          );
+                          return;
+                        }
+                      }
+
+                      // Resolve BankId from selected bank name
+                      final bank = bankList.firstWhere(
+                        (e) => e.bankName == selectedBank,
+                      );
+
+                      // Resolve EmployeeId from selected employee name
+                      String employeeId = '';
+                      if (selectedEmployeeName != null) {
+                        final emp = employeeList.firstWhere(
+                          (e) => e.name == selectedEmployeeName,
+                          orElse: () => AddDayBookLookupItem(id: '', name: ''),
+                        );
+                        employeeId = emp.id;
+                      }
+
+                      // Resolve CreatedBy / CreatorName from selected account name
+                      String createdBy = '';
+                      String creatorName = '';
+                      if (selectedAccountName != null) {
+                        final acc = accountNameList.firstWhere(
+                          (e) => e.name == selectedAccountName,
+                          orElse: () => AddDayBookLookupItem(id: '', name: ''),
+                        );
+                        createdBy = acc.id;
+                        creatorName = acc.name;
+                      }
+
+                      String finalDescription = remarksController.text.trim();
+                      if (_groupName == 'employee' && selectedParty?.toUpperCase() == 'COMPLAINT LOSS') {
+                        finalDescription = complaintDetailsController.text.trim();
+                      }
+
+                      // Call Save API
+                      final result = await BankBookSaveService().saveEmployeeBankBook(
+                        bankId: bank.bankId,
+                        transactionType: transactionType ?? '',
+                        amount: finalAmount,
+                        type: selectedParty ?? '',
+                        employeeId: employeeId,
+                        description: finalDescription,
+                        createdBy: createdBy,
+                        creatorName: creatorName,
+                        paymentDate: backDatesController.text.trim(),
+                        voucherNo: voucherController.text.trim(),
+                        toPayment: selectedEmployeeName,
+                        complaintImagePath: _complaintImage?.path,
+                      );
+
+                      if (result != null && result.status) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(result.message.isNotEmpty
+                                ? result.message
+                                : 'Saved successfully!'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                        // Reload data to get fresh voucher number
+                        loadInitialData();
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(result?.message ?? 'Failed to save'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
